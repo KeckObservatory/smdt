@@ -1,5 +1,3 @@
-
-
 from astropy.io import fits
 import maskLayouts
 import drawUtils
@@ -7,27 +5,97 @@ import utils
 import matplotlib
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+import logging
+logger = logging.getLogger('smdt')
 matplotlib.use('agg')
 import os
 
-def makeplot(plotname):
+def pf(filename):
+    segments = []
+    current_segment = []
+
+    with open(filename, 'r') as f:
+        for line in f:
+            line = line.strip()
+
+            # Skip blank lines
+            if not line:
+                continue
+
+            # Skip comment / header lines
+            if line.startswith('('):
+                continue
+
+            # Start a new segment
+            if line.lower().startswith('newrow'):
+                if current_segment:          # save previous segment
+                    segments.append(current_segment)
+                    current_segment = []
+                continue
+
+            # Otherwise it should be coordinates
+            parts = line.split()
+            if len(parts) >= 2:
+                x = float(parts[0])
+                y = float(parts[1])
+                current_segment.append((x, y))
+
+    # Add the last segment if file didn’t end with newrow
+    if current_segment:
+        segments.append(current_segment)
+
+    # ---- Plotting ----
+    plt.figure()
+
+    for seg in segments:
+        xs = [p[0] for p in seg]
+        ys = [p[1] for p in seg]
+        plt.plot(xs, ys, alpha=0.4)   # draws line from (x,y) to next (x,y)
+
+    plt.gca().set_aspect('equal', adjustable='box')
+#    plt.xlabel("X")
+#    plt.ylabel("Y")
+#    plt.title("Segments from m31.file3")
+#    plt.show()
+
+
+
+def ms(XIN,YIN):
+    X_MILL  = 177.8            # mm
+    Y_MILL  = 132.3            # mm
+    XOFF_MILL = 0.0
+    YOFF_MILL = 0.0
+    X_CENTER   = 305.0         # mm
+    Y_CENTER   = 0.0           # mm
+    XOUT = (X_CENTER - XIN) + X_MILL + XOFF_MILL
+    YOUT = (YIN - Y_CENTER) + Y_MILL + YOFF_MILL
+    return XOUT,YOUT
+
+
+
+#def makeplot(plotname):
+def makeplot(slitdata, typedata, plotname):
     sx1,sx2,sx3,sx4=[],[],[],[]
     sy1,sy2,sy3,sy4=[],[],[],[]
     col=[]
 
-    f=fits.open(plotname)
-    slitdata=f[7].data
-    typedata=f[4].data
+
     for i in range(len(slitdata)):
-        print(slitdata[i])
-        sx1.append(slitdata[i][3])
-        sy1.append(slitdata[i][4])
-        sx2.append(slitdata[i][5])
-        sy2.append(slitdata[i][6])
-        sx3.append(slitdata[i][7])
-        sy3.append(slitdata[i][8])
-        sx4.append(slitdata[i][9])
-        sy4.append(slitdata[i][10])
+        logger.debug(f'slitdata: {slitdata[i]}')
+        print(slitdata[i][4])
+        x,y=(slitdata[i][3],slitdata[i][4])
+        print(y)
+        sx1.append(x)
+        sy1.append(y)
+        x,y=(slitdata[i][5],slitdata[i][6])
+        sx2.append(x)
+        sy2.append(y)
+        x,y=(slitdata[i][7],slitdata[i][8])
+        sx3.append(x)
+        sy3.append(y)
+        x,y=(slitdata[i][9],slitdata[i][10])
+        sx4.append(x)
+        sy4.append(y)
         if typedata[i][5]=='P':      #color blue for slits
             col.append('royalblue')
 #        elif typedata[i][5]=='G':    #color gold for guidestars - but will never appear in slitdata commenting out
@@ -37,10 +105,6 @@ def makeplot(plotname):
         else:
             #can't identify slit type?
             col.append('crimson')    #color red if something else
-    
-
-
-    import matplotlib.pyplot as plt
 
     fig, sps = plt.subplots(1, figsize=(16, 5))
     plt.subplot(111)
@@ -49,9 +113,10 @@ def makeplot(plotname):
     ax=plt.gca()
     ZPT_YM=128.803
     layout = maskLayouts.MaskLayouts["lris"]
-    layoutoff = maskLayouts.scaleLayout(layout, 1, 0,0) ###
-    layoutlris = maskLayouts.lrismcs(layoutoff)
-    layoutMM = maskLayouts.scaleLayout(layoutlris, utils.AS2MM, 0,0) ###
+
+
+
+    layoutMM = maskLayouts.scaleLayout(layout, utils.AS2MM, 177.8-305, 132.3) ###
 
     drawUtils.drawPatch(ax, layoutMM, fc="None", ec="g")
   
@@ -66,11 +131,12 @@ def makeplot(plotname):
         else:
             plt.plot([sx1[i],sx2[i],sx3[i],sx4[i],sx1[i]],[sy1[i],sy2[i],sy3[i],sy4[i],sy1[i]],color=col[i],alpha=0.8,label='Unknown')
 
-    plt.gca().invert_xaxis()
+    #pf('m31.file3')
+#    plt.gca().invert_xaxis()
     plt.grid()
-#plt.legend([Line2D([], [], color='gold'),Line2D([], [], color='violet'),Line2D([], [], color='royalblue'),Line2D([], [], color='crimson')],['Guide Star','Alignment Box','Target slit','Unknown'],loc="upper left")
     plt.legend([Line2D([], [], color='violet'),Line2D([], [], color='royalblue')],['Alignment Box','Target slit'],loc="upper left")
-    if plotname.endswith('.fits'):
-        plt.savefig(plotname[:-5]+'.png')
-    else:
-        plt.savefig(plotname+'.png')
+
+
+
+
+    return plt
