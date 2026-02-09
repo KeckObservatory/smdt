@@ -168,10 +168,14 @@ def refr_coords(obs, site):
     return obsOut 
 
 
-def fld2telax(obs, ra_fld, dec_fld, ratel, dectel):
+def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
     # FLD2TELAX:  from field center and rotator PA, calc coords of telescope axis
-    FLDCEN_X = 420. #305mm 420"
-    FLDCEN_Y = 0.
+    if inst=='lris':  
+        FLDCEN_X = 420. 
+        FLDCEN_Y = 0.
+    else:   #assume deimos
+        FLDCEN_X = 0
+        FLDCEN_Y = 270
     # convert field center offset (arcsec) to radians
     r = np.radians(np.sqrt(FLDCEN_X*FLDCEN_X + FLDCEN_Y*FLDCEN_Y) / 3600.)
     # get PA of field center
@@ -179,9 +183,8 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel):
     cosr = np.cos(r)
     sinr = np.sin(r)
     outObs = []
-    count=0
+    
     for ob in obs:
-
         
         PA_ROT = ob['pa0_fld']
         cost = np.cos(PA_ROT - pa_fld)
@@ -199,93 +202,8 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel):
         ob[ratel] = ra_tel
         ob[dectel] = dec_tel
         outObs.append(ob)
-        if count==0:
-            pltang(PA_ROT,ob[dec_fld],ob[ra_fld])
-        count=count+1
     return outObs
 
-
-def pltang(PA_ROT,dec_fld,ra_fld):
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    # -----------------------------
-    # Inputs (your existing values)
-    # -----------------------------
-    FLDCEN_X = 0.0      # arcsec
-    FLDCEN_Y = 270.0    # arcsec
-
-
-    # -----------------------------
-    # Field-center geometry
-    # -----------------------------
-    r_arcsec = np.sqrt(FLDCEN_X**2 + FLDCEN_Y**2)
-    r = np.radians(r_arcsec / 3600.0)
-
-    pa_fld = np.arctan2(FLDCEN_Y, FLDCEN_X)
-
-    cosr = np.cos(r)
-    sinr = np.sin(r)
-
-    # -----------------------------
-    # Angle differences
-    # -----------------------------
-    cost = np.cos(PA_ROT - pa_fld)
-    sint = np.sin(PA_ROT - pa_fld)
-
-    cosd = np.cos(dec_fld)
-    sind = np.sin(dec_fld)
-
-    # -----------------------------
-    # Telescope axis offsets
-    # (small-angle approx for viz)
-    # -----------------------------
-    sina = sinr * sint / cosd
-    cosa = np.sqrt(1.0 - sina**2)
-
-    # Convert to arcsec for plotting
-    dx_tel = -np.degrees(np.arcsin(sina)) * 3600.0
-    dy_tel =  np.degrees(np.arccos(cosa)) * 3600.0 * np.sign(cost)
-
-    # -----------------------------
-    # Plot
-    # -----------------------------
-    plt.figure(figsize=(6, 6))
-    plt.axhline(0, color='gray', lw=0.5)
-    plt.axvline(0, color='gray', lw=0.5)
-
-    # Field center offset
-    plt.arrow(0, 0, FLDCEN_X, FLDCEN_Y,
-              head_width=5, length_includes_head=True,
-              color='tab:blue', label='Field center offset')
-
-    # Rotator PA direction (unit vector)
-    pa_len = r_arcsec
-    plt.arrow(0, 0,
-              pa_len * np.cos(PA_ROT),
-              pa_len * np.sin(PA_ROT),
-              head_width=5,
-              color='tab:green',
-              label='Rotator PA')
-
-    # Telescope axis direction
-    plt.arrow(0, 0, dx_tel, dy_tel,
-              head_width=5,
-              color='tab:red',
-              label='Telescope axis')
-
-    plt.gca().set_aspect('equal')
-    plt.xlabel('ΔRA (arcsec)')
-    plt.ylabel('ΔDec (arcsec)')
-    plt.title('Field Center, Rotator PA, and Telescope Axis')
-    plt.legend()
-    plt.grid(alpha=0.3)
-
-    plt.savefig('plt.png')
-    plt.close()
-    print(f"Field PA (fieldcen): {np.degrees(pa_fld):.2f} deg")
-    print(f"Rotator PA         : {np.degrees(PA_ROT):.2f} deg")
-    print(f"Delta PA           : {np.degrees(PA_ROT - pa_fld):.2f} deg")
 
 
 def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
@@ -317,7 +235,7 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
             _relpa = None
             rangle = 0.  # 90 not zero??
         else:
-            _relpa = ob['slitpa'] -pa0  # check that slitLPA is available
+            _relpa = ob['slitpa'] - pa0  # check that slitLPA is available
             rangle = _relpa
 
         # For simplicity, we calculate the endpoints in X here; note use of FLIP
@@ -461,115 +379,6 @@ def unrefr_coords(slit, site):
 
     return outSlit 
 
-
-def mask_coords_bak(obs):
-    asec_rad = 206264.80
-    FLIP = -1.
-    RELPA = obs['relpa']
-    XARCS = obs['xarcsS']
-    YARCS = obs['yarcsS']
-    # Correct?  -- correct for xarcsS since both are centered on the slit
-    LEN1 = obs['length1S']
-    LEN2 = obs['length2S']  # Correct?
-    FL_TEL = 150327.0
-
-    X1 = obs['X1']
-    Y1 = obs['Y1']
-    X2 = obs['X2']
-    Y2 = obs['Y2']
-
-
-# offset from telescope axis to slitmask origin, IN SLITMASK COORDS
-#        yoff = ZPT_YM * (1. - np.cos (np.radians(M_ANGLE)))
-    yoff = 0.       # XXX check!  Am not sure where the above comes from
-    xoff = 0.
-
-    SLWID = []
-    XMM1, YMM1, XMM2, YMM2, XMM3, YMM3, XMM4, YMM4 = [], [], [], [], [], [], [], []
-    xfp1, yfp1, xfp2, yfp2, xfp3, yfp3, xfp4, yfp4 = [], [], [], [], [], [], [], []
-    for i in range(len(RELPA)):
-
-        SLWID.append(obs['slitWidth'][i])
-#        if obs['pcode'][i]==-2:           ########## <--- alignment box                       <<<----should be done earlier?
-#            SLWID.append(4)
-#        else:
-#            SLWID.append(obs['slitWidth'][i])
-
-# XXX For now, carry through the RELPA thing; in end, must be specified!
-        if (RELPA[i] != None):
-            cosa = np.cos(RELPA[i])
-            sina = np.sin(RELPA[i])
-        else:
-            cosa = 1.
-            sina = 0.
-
-# This is a recalculation ... prob not needed
-        X1[i] = XARCS[i] - LEN1[i] * cosa * FLIP
-        Y1[i] = YARCS[i] - LEN1[i] * sina
-        X2[i] = XARCS[i] + LEN2[i] * cosa * FLIP
-        Y2[i] = YARCS[i] + LEN2[i] * sina
-
-
-# X1,Y1 are now tan projections already!
-
-        xfp = FL_TEL * X1[i] / asec_rad
-        yfp = FL_TEL * (Y1[i] - 0.5*SLWID[i]) / asec_rad
-        pa = 0.
-
-        xfp1.append(X1[i])
-        yfp1.append(Y1[i] - 0.5*SLWID[i])
-
-        xfp, yfp = gnom_to_dproj_lris(xfp, yfp)         # (allowed)
-        xsm, ysm, pa = proj_to_mask_lris(xfp, yfp, pa)
-
-        XMM1.append(xsm + xoff)
-        YMM1.append(ysm + yoff)
-
-        xfp = FL_TEL * X2[i] / asec_rad
-        yfp = FL_TEL * (Y2[i] - 0.5*SLWID[i]) / asec_rad
-        pa = 0.
-
-        xfp2.append(X2[i])
-        yfp2.append(Y2[i] - 0.5*SLWID[i])
-
-        xfp, yfp = gnom_to_dproj_lris(xfp, yfp)         # (allowed)
-        xsm, ysm, pa = proj_to_mask_lris(xfp, yfp, pa)
-
-        XMM2.append(xsm + xoff)
-        YMM2.append(ysm + yoff)
-
-        xfp = FL_TEL * X2[i] / asec_rad
-        yfp = FL_TEL * (Y2[i] + 0.5*SLWID[i]) / asec_rad
-        pa = 0.
-
-        xfp3.append(X2[i])
-        yfp3.append(Y2[i] + 0.5*SLWID[i])
-
-        xfp, yfp = gnom_to_dproj_lris(xfp, yfp)         # (allowed)
-        xsm, ysm, pa = proj_to_mask_lris(xfp, yfp, pa)
-
-        XMM3.append(xsm + xoff)
-        YMM3.append(ysm + yoff)
-
-        xfp = FL_TEL * X1[i] / asec_rad
-        yfp = FL_TEL * (Y1[i] + 0.5*SLWID[i]) / asec_rad
-        pa = 0.
-
-        xfp4.append(X1[i])
-        yfp4.append(Y1[i] + 0.5*SLWID[i])
-
-        xfp, yfp = gnom_to_dproj_lris(xfp, yfp)         # (allowed)
-        xsm, ysm, pa = proj_to_mask_lris(xfp, yfp, pa)
-
-        XMM4.append(xsm + xoff)
-        YMM4.append(ysm + yoff)
-
-    obs['slitX1'], obs['slitX2'], obs['slitX3'], obs['slitX4'] = XMM1, XMM2, XMM3, XMM4
-    obs['slitY1'], obs['slitY2'], obs['slitY3'], obs['slitY4'] = YMM1, YMM2, YMM3, YMM4
-    obs['arcslitX1'], obs['arcslitX2'], obs['arcslitX3'], obs['arcslitX4'] = xfp1, xfp2, xfp3, xfp4
-    obs['arcslitY1'], obs['arcslitY2'], obs['arcslitY3'], obs['arcslitY4'] = yfp1, yfp2, yfp3, yfp4
-    return obs
-
 def mask_coords(obs):
     asec_rad = 206264.80
     FLIP = -1.
@@ -624,7 +433,144 @@ def mask_coords(obs):
 
         xfp = FL_TEL * X1 / asec_rad
         yfp = FL_TEL * (Y1 - 0.5*SLWID) / asec_rad
-        pa = 0. #0 for deimos 90 for lris
+        pa = 0.
+
+        xfp1 = X1
+        yfp1 = Y1 - 0.5*SLWID
+
+        xfp, yfp = gnom_to_dproj(xfp, yfp)         # (allowed)
+        xsm, ysm, pa = proj_to_mask(xfp, yfp, pa)
+
+        XMM1 = xsm + xoff
+        YMM1 = ysm + yoff
+
+        xfp = FL_TEL * X2 / asec_rad
+        yfp = FL_TEL * (Y2 - 0.5*SLWID) / asec_rad
+        pa = 0.
+
+        xfp2 = X2
+        yfp2 = Y2 - 0.5*SLWID
+
+        xfp, yfp = gnom_to_dproj(xfp, yfp)         # (allowed)
+        xsm, ysm, pa = proj_to_mask(xfp, yfp, pa)
+
+        XMM2 = xsm + xoff
+        YMM2 = ysm + yoff
+
+        xfp = FL_TEL * X2 / asec_rad
+        yfp = FL_TEL * (Y2 + 0.5*SLWID) / asec_rad
+        pa = 0.
+
+        xfp3 = X2
+        yfp3 = Y2 + 0.5*SLWID
+
+        xfp, yfp = gnom_to_dproj(xfp, yfp)         # (allowed)
+        xsm, ysm, pa = proj_to_mask(xfp, yfp, pa)
+
+        XMM3 = xsm + xoff
+        YMM3 = ysm + yoff
+
+        xfp = FL_TEL * X1 / asec_rad
+        yfp = FL_TEL * (Y1 + 0.5*SLWID) / asec_rad
+        pa = 0.
+
+        xfp4 = X1
+        yfp4 = Y1 + 0.5*SLWID
+
+        xfp, yfp = gnom_to_dproj(xfp, yfp)         # (allowed)
+        xsm, ysm, pa = proj_to_mask(xfp, yfp, pa)
+
+        XMM4 = xsm + xoff
+        YMM4 = ysm + yoff
+        ob['slitX1'] = XMM1
+        ob['slitX2'] = XMM2
+        ob['slitX3'] = XMM3
+        ob['slitX4'] = XMM4
+
+        ob['slitY1'] = YMM1
+        ob['slitY2'] = YMM2
+        ob['slitY3'] = YMM3
+        ob['slitY4'] = YMM4
+
+        ob['millX1'] = XMM1
+        ob['millX2'] = XMM2
+        ob['millX3'] = XMM3
+        ob['millX4'] = XMM4
+
+        ob['millY1'] = YMM1
+        ob['millY2'] = YMM2
+        ob['millY3'] = YMM3
+        ob['millY4'] = YMM4
+
+
+        ob['arcslitX1'] = xfp1
+        ob['arcslitX2'] = xfp2
+        ob['arcslitX3'] = xfp3
+        ob['arcslitX4'] = xfp4
+
+        ob['arcslitY1'] = yfp1
+        ob['arcslitY2'] = yfp2
+        ob['arcslitY3'] = yfp3
+        ob['arcslitY4'] = yfp4
+        outObs.append(ob)
+
+    return outObs
+
+def mask_coords_lris(obs):
+    asec_rad = 206264.80
+    FLIP = -1.
+    FL_TEL = 150327.0
+    outObs=[]
+
+    for ob in obs:
+        RELPA = ob['relpa']
+        XARCS = ob['xarcsS']
+        YARCS = ob['yarcsS']
+        # Correct?  -- correct for xarcsS since both are centered on the slit
+        LEN1 = ob['length1S']
+        LEN2 = ob['length2S']  # Correct?
+        SLWID = ob['slitWidth']
+
+        X1 = ob['X1']
+        Y1 = ob['Y1']
+        X2 = ob['X2']
+        Y2 = ob['Y2']
+
+        # offset from telescope axis to slitmask origin, IN SLITMASK COORDS
+        #        yoff = ZPT_YM * (1. - np.cos (np.radians(M_ANGLE)))
+        yoff = 0.       # XXX check!  Am not sure where the above comes from
+        xoff = 0.
+
+        # SLWID = []
+        # XMM1, YMM1, XMM2, YMM2, XMM3, YMM3, XMM4, YMM4 = [], [], [], [], [], [], [], []
+        # xfp1, yfp1, xfp2, yfp2, xfp3, yfp3, xfp4, yfp4 = [], [], [], [], [], [], [], []
+
+        # SLWID.append(ob['slitWidth'])
+#        if obs['pcode'][i]==-2:           ########## <--- alignment box                       <<<----should be done earlier?
+#            SLWID.append(4)
+#        else:
+#            SLWID.append(obs['slitWidth'][i])
+
+# XXX For now, carry through the RELPA thing; in end, must be specified!
+        if (RELPA != None):
+            cosa = np.cos(RELPA)
+            sina = np.sin(RELPA)
+        else:
+            cosa = 1.
+            sina = 0.
+
+# This is a recalculation ... prob not needed
+        X1 = XARCS - LEN1 * cosa * FLIP
+        Y1 = YARCS - LEN1 * sina
+        X2 = XARCS + LEN2 * cosa * FLIP
+        Y2 = YARCS + LEN2 * sina
+
+
+# X1,Y1 are now tan projections already!
+
+        xfp = FL_TEL * X1 / asec_rad
+        yfp = FL_TEL * (Y1 - 0.5*SLWID) / asec_rad
+        pa = 0. 
 
         xfp1 = X1
         yfp1 = Y1 - 0.5*SLWID
@@ -704,7 +650,8 @@ def mask_coords(obs):
 #
 
 
-def gnom_to_dproj(xg, yg):
+def gnom_to_dproj(xg, yg, inst):
+
     DIST_C0, DIST_C2 = 0.0e-4, -1.111311e-8
     rho = np.sqrt(xg * xg + yg * yg)
     cosa = yg / rho
@@ -806,8 +753,9 @@ def proj_to_mask(xp, yp, ap):
 
 def gen_obs(targetList,fileparams):
     obs, site = init_dicts(targetList, fileparams)
+    inst=fileparams['Instrument'].lower()
     obs = refr_coords(obs, site)
-    obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR')
+    obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR',inst)
     obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR')
     min_slit = float(fileparams['MinSlitLength'])
     slit_gap = float(fileparams['MinSlitSeparation'])
@@ -824,7 +772,8 @@ def gen_obs(targetList,fileparams):
 
 def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
     logger.debug('genSlits')
- 
+    inst=fileparams['Instrument'].lower()
+
     if fileparams['NoOverlap'] == 'yes':
         adj_len = True
     else:
@@ -836,17 +785,20 @@ def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
     obs, site = init_dicts(targetList, fileparams)
     logger.debug('init_dicts')
     obs = refr_coords(obs, site)
-    obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR')
+    obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR',inst)
     obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR', proj_len)
     min_slit = float(fileparams['MinSlitLength'])
     slit_gap = float(fileparams['MinSlitSeparation'])
     slit = gen_slits_from_obs(obs, min_slit, slit_gap, adj_len, auto_sel)
     slit = sky_coords(slit)
     slit = unrefr_coords(slit, site)
-    slit = fld2telax(slit, 'ra0_fldU', 'dec0_fldU', 'ra_telU', 'dec_telU')
+    slit = fld2telax(slit, 'ra0_fldU', 'dec0_fldU', 'ra_telU', 'dec_telU',inst)
     slit = tel_coords(slit, 'raRadU', 'decRadU', 'ra_telU', 'dec_telU', proj_len)
-    slit = mask_coords(slit)
-    slit = calc_auto.get_mill(slit)
+    if inst=='deimos':
+        slit = mask_coords(slit)
+    if inst=='lris':
+        slit = mask_coords_lris(slit)
+        slit = calc_auto.get_mill(slit)
 
     outTargetList = []
     slitKeys = [ 'slitWidth', 'selected',
@@ -860,7 +812,7 @@ def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
                 'newcenterRADeg', 'newcenterDECDeg',
                 'arcslitY1', 'arcslitY2', 'arcslitY3', 'arcslitY4',
                 'millX1','millX2','millX3','millX4',
-                'millY1','millY2','millY3','millY4']
+                'millY1','millY2','millY3','millY4'] ##### TODO Do we want to overwrite slitX1 with this?
     obsKeys = ['xarcs', 'yarcs', 'objectId', 'length1',
                'length2', 'ra_fldR', 'dec_fldR', 'lst']
     outTargetList = combine_target_with_slit_and_obs(targetList, slit, obs, slitKeys, obsKeys)
@@ -892,18 +844,24 @@ def genMaskOut(df,fileparams):
             proj_len=True
         else:
             proj_len=False
+
+        inst=fileparams['Instrument'].lower()
         df=df.loc[df['selected']==1]
         obs,site=init_dicts(df,fileparams)
         obs=refr_coords(obs,site)
-        obs=fld2telax(obs,'ra_fldR','dec_fldR','ra_telR','dec_telR')
+        obs=fld2telax(obs,'ra_fldR','dec_fldR','ra_telR','dec_telR',inst)
         obs=tel_coords(obs,'raRadR','decRadR','ra_telR','dec_telR',proj_len)
         slit=gen_slits_from_obs(obs,adj_len)
         slit=sky_coords(slit)
         slit=unrefr_coords(slit,site)
-        slit=fld2telax(slit,'ra0_fldU','dec0_fldU','ra_telU','dec_telU')
+        slit=fld2telax(slit,'ra0_fldU','dec0_fldU','ra_telU','dec_telU',inst)
         slit=tel_coords(slit,'raRadU','decRadU','ra_telU','dec_telU',proj_len)
-        slit=mask_coords(slit)
-        slit = calc_auto.get_mill(slit)
+        if inst=='deimos':
+            slit = mask_coords(slit)
+        if inst=='lris':
+            slit = mask_coords_lris(slit)
+            slit = calc_auto.get_mill(slit)
+
 
 
         df['slitX1'],df['slitX2'],df['slitX3'],df['slitX4']=slit['slitX1'],slit['slitX2'],slit['slitX3'],slit['slitX4']
@@ -967,8 +925,8 @@ def genMaskOut(df,fileparams):
         'author':fileparams['Authorfd'][0],
         'observer':fileparams['Observerfd'][0],
         'project':fileparams['ProjectNamefd'][0],
-        'instrument':'LRIS',
-        'telescope':'Keck II'
+        'instrument': fileparams['Instrument'],
+        'telescope': fileparams['Telescope']   ### TODO
  }
 
     params['descreate'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
@@ -980,8 +938,8 @@ def genMaskOut(df,fileparams):
     slitsdf = pd.DataFrame(slits)
     slitsdf = slitsdf[(slitsdf['selected'] == 1) & (slitsdf['inMask'] == 1)]
     slitsdf.reset_index(drop=True, inplace=True)
-    print(slitsdf)##
-########3    assert slitsdf.shape[0] > 0, 'No slits selected for mask'
+
+########3    assert slitsdf.shape[0] > 0, 'No slits selected for mask'  ############?  TODO LOOK at what this is doing!!
 
     paramdf = pd.DataFrame(params)
     sitedf = pd.DataFrame(site)
@@ -1029,8 +987,8 @@ def gen_mask_out(targetList, fileparams):
         'author': fileparams['Author'],
         'observer': fileparams['Observer'],
         'project': fileparams['ProjectName'],
-        'instrument': 'LRIS',
-        'telescope': 'Keck II'
+        'instrument': fileparams['Instrument'],
+        'telescope': fileparams['Telescope']   ### TODO
     }
 
     params['descreate'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
