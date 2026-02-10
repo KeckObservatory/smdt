@@ -165,7 +165,8 @@ def resetSelection():
 
 @app.route('/generateSlits', methods=["GET", "POST"])
 def generateSlits():
-    session['targetList'] = targs.mark_inside(session['targetList'])
+    inst = app.config["INSTRUMENT"]
+    session['targetList'] = targs.mark_inside(session['targetList'],inst)
     # auto_sel=False, since everything is already selected by this point?
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=False)
@@ -178,7 +179,8 @@ def generateSlits():
 
 @app.route('/recalculateMask', methods=["GET", "POST"])
 def recalculateMask():
-    session['targetList'] = targs.mark_inside(session['targetList'])
+    inst = app.config["INSTRUMENT"]
+    session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=True)
     session.modified = True
@@ -189,9 +191,10 @@ def recalculateMask():
 @app.route('/saveMaskDesignFile', methods=["GET", "POST"])
 def saveMaskDesignFile():  # should only save current rather than re-running everything!
     logger.info('Saving mask design file')
+    inst = app.config["INSTRUMENT"]
 #    try:
     if True:
-        session['targetList'] = targs.mark_inside(session['targetList'])
+        session['targetList'] = targs.mark_inside(session['targetList'],inst)
         outp = {'status': 'OK', **
                 targs.to_json_with_info(session['params'], session['targetList'])}
         mdfName = os.path.join(
@@ -229,7 +232,7 @@ def saveMaskDesignFile():  # should only save current rather than re-running eve
 
 
 
-            plt = plot.makeplot(slit.data, type.data, names[0])
+            plt = plot.makeplot(slit.data, type.data, names[0],inst)
             plt.savefig(plot_data, format='png')
             plot_data.seek(0)
             tarinfo = tarfile.TarInfo(name=names[2])
@@ -262,6 +265,7 @@ def saveMaskDesignFile():  # should only save current rather than re-running eve
 
 @app.route('/sendTargets2Server', methods=["GET", "POST"])
 def sendTargets2Server():
+    inst = app.config["INSTRUMENT"]
     filename = request.json.get('filename')
     if not filename:
         return
@@ -286,7 +290,7 @@ def sendTargets2Server():
 
     # generate slits
 #    session['targetList'] = calcmask.gen_obs(session['targetList'], session['params'])
-    session['targetList'] = targs.mark_inside(session['targetList'])
+    session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=False)
     session.modified = True
@@ -298,6 +302,7 @@ def sendTargets2Server():
 
 @app.route('/updateParams4Server', methods=["GET", "POST"])
 def updateParams4Server():
+    inst = app.config["INSTRUMENT"]
     session['params'] = request.json['formData']
     print(session['params'])
     # ok, session['params'] = validate_params(session['params'])
@@ -307,7 +312,7 @@ def updateParams4Server():
 
     if 'targetList' not in session:
         session['targetList'] = []
-    session['targetList'] = targs.mark_inside(session['targetList'])
+    session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=False)
     session.modified = True

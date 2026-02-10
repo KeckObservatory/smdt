@@ -60,21 +60,10 @@ def pf(filename):
 
 
 
-def ms(XIN,YIN):
-    X_MILL  = 177.8            # mm
-    Y_MILL  = 132.3            # mm
-    XOFF_MILL = 0.0
-    YOFF_MILL = 0.0
-    X_CENTER   = 305.0         # mm
-    Y_CENTER   = 0.0           # mm
-    XOUT = (X_CENTER - XIN) + X_MILL + XOFF_MILL
-    YOUT = (YIN - Y_CENTER) + Y_MILL + YOFF_MILL
-    return XOUT,YOUT
 
 
 
-#def makeplot(plotname):
-def makeplot(slitdata, typedata, plotname):
+def makeplot(slitdata, typedata, plotname,inst):
     sx1,sx2,sx3,sx4=[],[],[],[]
     sy1,sy2,sy3,sy4=[],[],[],[]
     col=[]
@@ -112,11 +101,11 @@ def makeplot(slitdata, typedata, plotname):
 
     ax=plt.gca()
     ZPT_YM=128.803
-    layout = maskLayouts.MaskLayouts["lris"]
-
-
-
-    layoutMM = maskLayouts.scaleLayout(layout, utils.AS2MM, 177.8-305, 132.3) ###
+    layout = maskLayouts.MaskLayouts[inst]
+    if inst=='deimos':
+        layoutMM = maskLayouts.scaleLayout(layout, utils.AS2MM, 0, -ZPT_YM) ###
+    if inst=='lris':
+        layoutMM = maskLayouts.scaleLayout(layout, utils.AS2MM, 177.8-305, 132.3) ###
 
     drawUtils.drawPatch(ax, layoutMM, fc="None", ec="g")
   
@@ -131,8 +120,8 @@ def makeplot(slitdata, typedata, plotname):
         else:
             plt.plot([sx1[i],sx2[i],sx3[i],sx4[i],sx1[i]],[sy1[i],sy2[i],sy3[i],sy4[i],sy1[i]],color=col[i],alpha=0.8,label='Unknown')
 
-    #pf('m31.file3')
-#    plt.gca().invert_xaxis()
+    if inst=='deimos':
+        plt.gca().invert_xaxis()
     plt.grid()
     plt.legend([Line2D([], [], color='violet'),Line2D([], [], color='royalblue')],['Alignment Box','Target slit'],loc="upper left")
 

@@ -136,11 +136,11 @@ def sel_rank(opt, xlow, xupp, minsep, slit_gap):
     return opt
 
 
-def from_list(obs, min_slit, slit_gap, sel=True):
-    mask = ml.MaskLayouts['lris']#["deimos"]
+def from_list(obs, min_slit, slit_gap, inst, sel=True):
+    mask = ml.MaskLayouts[inst]#["deimos"]
     minX, maxX = np.min(mask, axis=0)[0], np.max(mask, axis=0)[0]
     # Convert dict of lists to list of dicts
-    obs = targs.mark_inside(obs)
+    obs = targs.mark_inside(obs,inst)
     out = selector(pd.DataFrame(obs), minX, maxX,
                    min_slit, slit_gap) if sel else obs
     keys = ['ra0_fld', 'dec0_fld', 'ha0_fld', 'lst', 'pa0_fld',

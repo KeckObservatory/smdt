@@ -295,11 +295,11 @@ def update_target(targetList, jvalues):
 
     return targetList, idx
 
-def mark_inside(targetList):
+def mark_inside(targetList,inst):
     """
     Sets the inMask flag to 1 (inside) or 0 (outside)
     """
-    layout = MaskLayouts['lris']
+    layout = MaskLayouts[inst]
     inOutChecker = InOutChecker(layout)
     outTargets = [] 
     for target in targetList:

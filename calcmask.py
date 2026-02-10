@@ -269,7 +269,7 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
         outObs.append(ob)
     return outObs 
 
-def gen_slits_from_obs(obs, min_slit, slit_gap, adj_len=False, auto_sel=True):
+def gen_slits_from_obs(obs, min_slit, slit_gap, inst, adj_len=False, auto_sel=True):
     for idx, ob in enumerate(obs):
 
         ob['index'] = idx 
@@ -281,7 +281,7 @@ def gen_slits_from_obs(obs, min_slit, slit_gap, adj_len=False, auto_sel=True):
         else:
             ob["slitLPA"] = ob['slitpa']
 
-    obs = dsimselector.from_list(obs, min_slit, slit_gap, auto_sel)
+    obs = dsimselector.from_list(obs, min_slit, slit_gap, inst, auto_sel)
     if adj_len:
         import gslit
         obs=gslit.len_slits(obs)
@@ -650,7 +650,7 @@ def mask_coords_lris(obs):
 #
 
 
-def gnom_to_dproj(xg, yg, inst):
+def gnom_to_dproj(xg, yg):
 
     DIST_C0, DIST_C2 = 0.0e-4, -1.111311e-8
     rho = np.sqrt(xg * xg + yg * yg)
@@ -759,7 +759,7 @@ def gen_obs(targetList,fileparams):
     obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR')
     min_slit = float(fileparams['MinSlitLength'])
     slit_gap = float(fileparams['MinSlitSeparation'])
-    slit = gen_slits_from_obs(obs, min_slit, slit_gap, False, False)
+    slit = gen_slits_from_obs(obs, min_slit, slit_gap, inst, False, False)
     slit = sky_coords(slit)
     targetListOut = []
     for idx, target in enumerate(targetList):
@@ -789,7 +789,7 @@ def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
     obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR', proj_len)
     min_slit = float(fileparams['MinSlitLength'])
     slit_gap = float(fileparams['MinSlitSeparation'])
-    slit = gen_slits_from_obs(obs, min_slit, slit_gap, adj_len, auto_sel)
+    slit = gen_slits_from_obs(obs, min_slit, slit_gap, inst, adj_len, auto_sel)
     slit = sky_coords(slit)
     slit = unrefr_coords(slit, site)
     slit = fld2telax(slit, 'ra0_fldU', 'dec0_fldU', 'ra_telU', 'dec_telU',inst)
@@ -851,7 +851,7 @@ def genMaskOut(df,fileparams):
         obs=refr_coords(obs,site)
         obs=fld2telax(obs,'ra_fldR','dec_fldR','ra_telR','dec_telR',inst)
         obs=tel_coords(obs,'raRadR','decRadR','ra_telR','dec_telR',proj_len)
-        slit=gen_slits_from_obs(obs,adj_len)
+        slit=gen_slits_from_obs(obs,inst,adj_len)  ## This isn't called? check genMaskOut TODO
         slit=sky_coords(slit)
         slit=unrefr_coords(slit,site)
         slit=fld2telax(slit,'ra0_fldU','dec0_fldU','ra_telU','dec_telU',inst)
