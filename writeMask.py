@@ -12,7 +12,7 @@ import pdb
 import io
 import pandas as pd
 import astropy.io.fits as pf
-
+from file3_builder import build_header
 from astropy.utils.exceptions import AstropyWarning
 import warnings
 
@@ -152,7 +152,7 @@ class MaskDesignOutputFitsFile:
         """
 
         tlist = self.slits
-        selected = tlist[tlist.selected == 1]
+        selected = tlist[tlist.selected == 1 & tlist.inmask == 1]
         objClassTable = ("Alignment_Star", "Guide_Star",
                          "Ignored", "Program_Target")
         cols = []
@@ -236,7 +236,7 @@ class MaskDesignOutputFitsFile:
         tel = self.tel
         cols = []
         createDate = params.descreate
-        selected = tlist[tlist.selected == 1]
+        selected = tlist[tlist.selected == 1 & tlist.inmask == 1]
         nSlits = selected.shape[0] - selected[selected.pcode == -1].shape[0]
         nObjs = nSlits + selected[selected.pcode == -1].shape[0]
 
@@ -297,7 +297,7 @@ class MaskDesignOutputFitsFile:
         params = self.params
         tel = self.tel
         cols = []
-        selected = tlist[(tlist.selected == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
 
         nSlits = selected.shape[0]
         if nSlits > 0:
@@ -336,7 +336,7 @@ class MaskDesignOutputFitsFile:
         """
         cols = []
         tlist = self.slits
-        selected = tlist[(tlist.selected == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
         nSlits = selected.shape[0]
         if nSlits > 0:
             cols.append(pf.Column(name="DesId", format="I11",
@@ -414,7 +414,7 @@ class MaskDesignOutputFitsFile:
         """
         tlist = self.slits
         cols = []
-        selected = tlist[(tlist.selected == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
         nSlits = selected.shape[0]
         if nSlits > 0:
             cols.append(pf.Column(name="bSlitId", format="I11",
@@ -502,6 +502,45 @@ class MaskDesignOutputFitsFile:
         with conf.set_temp('extension_name_case_sensitive', True):
             hlist = self._getHDUList()
             hlist.writeto(fileName, overwrite='True')
+
+    def writefile3(self, fileTarget, params):
+        """
+        Autoslit .file3 format for lris mask comparison 
+        """
+
+        tlist = self.slits
+
+        selected = tlist[
+            (tlist.selected == 1) &
+            (tlist.inMask == 1) &
+            (tlist.pcode != -1)
+        ]
+
+
+        content = build_header(selected,params)
+
+
+        for _, row in selected.iterrows():
+
+            Xm = [row.millX1, row.millX2, row.millX3, row.millX4]
+            Ym = [row.millY1, row.millY2, row.millY3, row.millY4]
+
+            content += "newrow\n"
+
+            for i in range(4):
+                content += f"{Xm[i]:12.6f}{Ym[i]:12.6f}{0.0:12.6f}\n"
+
+            # return to first corner (CNC path closure)
+            content += f"{Xm[0]:12.6f}{Ym[0]:12.6f}{0.0:12.6f}\n"
+
+        # Write to appropriate target
+        if isinstance(fileTarget, (str, bytes, os.PathLike)):
+            with open(fileTarget, "w") as f:
+                f.write(content)
+        else:
+            # Assume file-like (BytesIO)
+            fileTarget.write(content.encode("utf-8"))
+
 
     def writeOut(self, fileTarget):
         """

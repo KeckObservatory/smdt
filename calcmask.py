@@ -998,9 +998,9 @@ def gen_mask_out(targetList, fileparams):
               for (k, v) in params.items()}  # <-----fix this for correct outputs
 
     slitsdf = pd.DataFrame(slits)
-    slitsdf = slitsdf[(slitsdf['selected'] == 1) & (slitsdf['inMask'] == 1)]
-    slitsdf.reset_index(drop=True, inplace=True)
-    assert slitsdf.shape[0] > 0, 'No slits selected for mask'
+#    slitsdf = slitsdf[(slitsdf['selected'] == 1) & (slitsdf['inMask'] == 1)]
+    slitsdf.reset_index(drop=True, inplace=True) #probably not needed without the previous line?
+#    assert slitsdf.shape[0] > 0, 'No slits 
 
     paramdf = pd.DataFrame(params)
     sitedf = pd.DataFrame(site)

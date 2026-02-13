@@ -60,10 +60,32 @@ parser.add_argument(
     help="Instrument (default: deimos)"
 )
 
-args = parser.parse_args()
-INSTRUMENT = args.instrument.lower()
-print(f"Starting server in {INSTRUMENT.upper()} mode")
+group = parser.add_mutually_exclusive_group()
 
+group.add_argument(
+    "--lris",
+    action="store_const",
+    const="lris",
+    dest="instrument",
+    help="Use LRIS instrument"
+)
+
+group.add_argument(
+    "--deimos",
+    action="store_const",
+    const="deimos",
+    dest="instrument",
+    help="Use DEIMOS instrument"
+)
+
+# Default
+parser.set_defaults(instrument="deimos")
+
+args = parser.parse_args()
+INSTRUMENT = args.instrument
+
+
+print(f"Starting server in {INSTRUMENT.upper()} mode")
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -199,7 +221,7 @@ def saveMaskDesignFile():  # should only save current rather than re-running eve
                 targs.to_json_with_info(session['params'], session['targetList'])}
         mdfName = os.path.join(
             session['params']['OutputFits']).replace('.fits', '')
-        names = [f'{mdfName}.fits', f'{mdfName}.out',
+        names = [f'{mdfName}.fits', f'{mdfName}.out', f'{mdfName}.file3',
                  f'{mdfName}.png', f'{mdfName}.json']
         mdf, session['targetList'] = calcmask.gen_mask_out(
             session['targetList'], session['params'])
@@ -221,26 +243,30 @@ def saveMaskDesignFile():  # should only save current rather than re-running eve
             tarinfo.size = len(out_data.getvalue())
             tar.addfile(tarinfo, out_data)
 
+            if inst=='lris':
+                f3_data=BytesIO()
+                mdf.writefile3(f3_data,session['params'])
+                f3_data.seek(0)
+                tarinfo = tarfile.TarInfo(name=names[2])
+                tarinfo.size = len(f3_data.getvalue())
+                tar.addfile(tarinfo, f3_data)
+
+
             plot_data = BytesIO()
             # slitdata=f[7].data
             # typedata=f[4].data
             slit = mdf.genBluSlits()
             type = mdf.genDesiSlits()
 
-            print('/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n/n')
-            print(slit)
-
-
-
             plt = plot.makeplot(slit.data, type.data, names[0],inst)
             plt.savefig(plot_data, format='png')
             plot_data.seek(0)
-            tarinfo = tarfile.TarInfo(name=names[2])
+            tarinfo = tarfile.TarInfo(name=names[3])
             tarinfo.size = len(plot_data.getvalue())
             tar.addfile(tarinfo, plot_data)
             json_data = BytesIO(json.dumps(
                 outp, ensure_ascii=False, indent=4).encode('utf-8'))
-            tarinfo = tarfile.TarInfo(name=names[3])
+            tarinfo = tarfile.TarInfo(name=names[4])
             tarinfo.size = len(json_data.getvalue())
             tar.addfile(tarinfo, json_data)
 
