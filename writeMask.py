@@ -306,7 +306,7 @@ class MaskDesignOutputFitsFile:
             slitNames = [("%03d" % x) for x in selected.slitIdx]
             slitTypes = [slitTypeTable[min(3, p + 2)] for p in selected.pcode]
             slitLengths = [(l1 + l2)
-                           for l1, l2 in zip(selected.length1, selected.length2)]
+                           for l1, l2 in zip(selected.rlength1, selected.rlength2)]
 
             cols.append(pf.Column(name="dSlitId", format="I11",
                         null="-9999", unit="None", array=selected.slitIndex))
@@ -346,9 +346,9 @@ class MaskDesignOutputFitsFile:
             cols.append(pf.Column(name="dSlitId", format="I11",
                         null="-9999", unit="None", array=selected.slitIndex))
             cols.append(pf.Column(name="TopDist", format="F11.3",
-                        null="-9999.000", unit="arcsec", array=selected.length1))
+                        null="-9999.000", unit="arcsec", array=selected.rlength1))
             cols.append(pf.Column(name="BotDist", format="F11.3",
-                        null="-9999.000", unit="arcsec", array=selected.length2))
+                        null="-9999.000", unit="arcsec", array=selected.rlength2))
 
         return pf.TableHDU.from_columns(cols, name="SlitObjMap")
 
@@ -578,17 +578,17 @@ class MaskDesignOutputFitsFile:
         content += "# Selected Objects:\n"
         for i, row in enumerate(selected.iterrows()):
             idx = selected.index[i]
-            content += f"{selected.objectId[idx]}       {toSexagecimal(np.degrees(float(selected.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(selected.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {selected.mag[idx]} {selected.magband[idx]} {selected.pcode[idx]} 0 {selected.selected[idx]} {MajAxPA[idx]} {selected.length1[idx]} {selected.length2[idx]} {selected.slitWidth[idx]}\n"
+            content += f"{selected.objectId[idx]}       {toSexagecimal(np.degrees(float(selected.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(selected.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {selected.mag[idx]} {selected.magband[idx]} {selected.pcode[idx]} 0 {selected.selected[idx]} {MajAxPA[idx]} {selected.rlength1[idx]} {selected.rlength2[idx]} {selected.slitWidth[idx]}\n"
  
         content += "\n# Selected Guide Stars:\n"
         for i, row in enumerate(guides.iterrows()):
             idx = guides.index[i]
-            content += f"{guides.objectId[idx]}       {toSexagecimal(np.degrees(float(guides.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(guides.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {guides.mag[idx]} {guides.magband[idx]} {guides.pcode[idx]} 0 {guides.selected[idx]} {gsMajAxPA[idx]} {guides.length1[idx]} {guides.length2[idx]} {guides.slitWidth[idx]}\n"
+            content += f"{guides.objectId[idx]}       {toSexagecimal(np.degrees(float(guides.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(guides.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {guides.mag[idx]} {guides.magband[idx]} {guides.pcode[idx]} 0 {guides.selected[idx]} {gsMajAxPA[idx]} {guides.rlength1[idx]} {guides.rlength2[idx]} {guides.slitWidth[idx]}\n"
 
         content += "\n# Non-Selected Objects:\n"
         for i, row in enumerate(nonselected.iterrows()):
             idx = nonselected.index[i]
-            content += f"{nonselected.objectId[idx]}       {toSexagecimal(np.degrees(float(nonselected.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(nonselected.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {nonselected.mag[idx]} {nonselected.magband[idx]} {nonselected.pcode[idx]} 0 {nonselected.selected[idx]} {nsMajAxPA[idx]} {nonselected.length1[idx]} {nonselected.length2[idx]} {nonselected.slitWidth[idx]}\n"
+            content += f"{nonselected.objectId[idx]}       {toSexagecimal(np.degrees(float(nonselected.raRad[idx].astype(float)))/15., secFmt='{:08.5f}')} {toSexagecimal(np.degrees(float(nonselected.decRad[idx].astype(float))), secFmt='{:08.5f}')} 2000.0 {nonselected.mag[idx]} {nonselected.magband[idx]} {nonselected.pcode[idx]} 0 {nonselected.selected[idx]} {nsMajAxPA[idx]} {nonselected.rlength1[idx]} {nonselected.rlength2[idx]} {nonselected.slitWidth[idx]}\n"
 
         # Write to appropriate target
         if isinstance(fileTarget, (str, bytes, os.PathLike)):
