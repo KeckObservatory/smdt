@@ -170,7 +170,9 @@ def refr_coords(obs, site):
 
 def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
     # FLD2TELAX:  from field center and rotator PA, calc coords of telescope axis
+    print('fld2telax using ',inst)
     if inst=='lris':  
+        print('fld2telax using lris')
         FLDCEN_X = 420. 
         FLDCEN_Y = 0.
     else:   #assume deimos
@@ -270,6 +272,7 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
     return outObs 
 
 def gen_slits_from_obs(obs, min_slit, slit_gap, inst, adj_len=False, auto_sel=True):
+    print('gen_slits_from_obs using inst',inst)
     for idx, ob in enumerate(obs):
 
         ob['index'] = idx 
@@ -754,6 +757,7 @@ def proj_to_mask(xp, yp, ap):
 def gen_obs(targetList,fileparams):
     obs, site = init_dicts(targetList, fileparams)
     inst=fileparams['Instrument'].lower()
+    print('gen_obs using inst ',inst)
     obs = refr_coords(obs, site)
     obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR',inst)
     obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR')
@@ -773,6 +777,7 @@ def gen_obs(targetList,fileparams):
 def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
     logger.debug('genSlits')
     inst=fileparams['Instrument'].lower()
+    print('gen_slits using inst',inst)
 
     if fileparams['NoOverlap'] == 'yes':
         adj_len = True
@@ -846,6 +851,8 @@ def genMaskOut(df,fileparams):
             proj_len=False
 
         inst=fileparams['Instrument'].lower()
+        print('genMaskOut using inst',inst)
+
         df=df.loc[df['selected']==1]
         obs,site=init_dicts(df,fileparams)
         obs=refr_coords(obs,site)
@@ -954,7 +961,7 @@ def gen_mask_out(targetList, fileparams):
     targetList, slits, site = gen_slits(targetList, fileparams, auto_sel=False, returnSlitSite=True)
     df = pd.DataFrame(targetList)
 
-
+    print('calling gen_mask_out')
     tel = df[['newcenterRADeg', 'newcenterDECDeg', 'lst' ]].copy()
     tel.loc[:, 'dateobs'] = fileparams['ObsDate']
     #tel = {k: ([v] if type(v) != list else v) for (k, v) in tel.items()}

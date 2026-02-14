@@ -90,6 +90,10 @@ print(f"Starting server in {INSTRUMENT.upper()} mode")
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 app.config["INSTRUMENT"] = INSTRUMENT
+if app.config["INSTRUMENT"] == 'lris':
+    app.config["TELESCOPE"]='Keck I'
+else:
+    app.config["TELESCOPE"]='Keck II'
 Session(app)
 CORS(app, supports_credentials=True)
 
@@ -188,6 +192,7 @@ def resetSelection():
 @app.route('/generateSlits', methods=["GET", "POST"])
 def generateSlits():
     inst = app.config["INSTRUMENT"]
+    print('generateSlits with ',inst)
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     # auto_sel=False, since everything is already selected by this point?
     session['targetList'] = calcmask.gen_slits(
@@ -202,6 +207,7 @@ def generateSlits():
 @app.route('/recalculateMask', methods=["GET", "POST"])
 def recalculateMask():
     inst = app.config["INSTRUMENT"]
+    print('recalculateMask with ',inst)
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=True)
@@ -214,6 +220,8 @@ def recalculateMask():
 def saveMaskDesignFile():  # should only save current rather than re-running everything!
     logger.info('Saving mask design file')
     inst = app.config["INSTRUMENT"]
+    print('saveMaskDesignFile for ',inst)
+
 #    try:
     if True:
         session['targetList'] = targs.mark_inside(session['targetList'],inst)
@@ -292,6 +300,8 @@ def saveMaskDesignFile():  # should only save current rather than re-running eve
 @app.route('/sendTargets2Server', methods=["GET", "POST"])
 def sendTargets2Server():
     inst = app.config["INSTRUMENT"]
+    print('sendTargets2Server with ',inst)
+
     filename = request.json.get('filename')
     if not filename:
         return
@@ -304,6 +314,9 @@ def sendTargets2Server():
         except Exception as err:
             logger.warning(f'Failed to convert {key} to float: {err}')
             pass
+    session['params']['Instrument'] = app.config["INSTRUMENT"]
+    session['params']['Telescope'] = app.config["TELESCOPE"]
+
     fh = [line for line in request.json['file'].split('\n') if line]
     session['targetList'] = targs.readRaw(fh, session['params'])
     # check if ra dec is 0, 0, if so, set to first target
@@ -315,6 +328,7 @@ def sendTargets2Server():
                              for target in session['targetList']]
 
     # generate slits
+    print('send2server',session['params'])
 #    session['targetList'] = calcmask.gen_obs(session['targetList'], session['params'])
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
@@ -380,6 +394,7 @@ def getMaskLayout():
 @app.route('/')
 def home():
     instrument = app.config["INSTRUMENT"]
+    print('Render template for instrument ',instrument)
     if instrument == "lris":
         return render_template("dt_lris.html")
     else:  # deimos default

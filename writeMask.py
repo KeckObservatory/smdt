@@ -152,7 +152,7 @@ class MaskDesignOutputFitsFile:
         """
 
         tlist = self.slits
-        selected = tlist[tlist.selected == 1 & tlist.inmask == 1]
+        selected = tlist[(tlist.selected == 1) & (tlist.inMask == 1)]
         objClassTable = ("Alignment_Star", "Guide_Star",
                          "Ignored", "Program_Target")
         cols = []
@@ -236,7 +236,7 @@ class MaskDesignOutputFitsFile:
         tel = self.tel
         cols = []
         createDate = params.descreate
-        selected = tlist[tlist.selected == 1 & tlist.inmask == 1]
+        selected = tlist[(tlist.selected == 1) & (tlist.inMask == 1)]
         nSlits = selected.shape[0] - selected[selected.pcode == -1].shape[0]
         nObjs = nSlits + selected[selected.pcode == -1].shape[0]
 
@@ -297,7 +297,7 @@ class MaskDesignOutputFitsFile:
         params = self.params
         tel = self.tel
         cols = []
-        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inMask == 1) & (tlist.pcode !=-1)]
 
         nSlits = selected.shape[0]
         if nSlits > 0:
@@ -336,7 +336,7 @@ class MaskDesignOutputFitsFile:
         """
         cols = []
         tlist = self.slits
-        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inMask == 1) & (tlist.pcode !=-1)]
         nSlits = selected.shape[0]
         if nSlits > 0:
             cols.append(pf.Column(name="DesId", format="I11",
@@ -414,7 +414,7 @@ class MaskDesignOutputFitsFile:
         """
         tlist = self.slits
         cols = []
-        selected = tlist[(tlist.selected == 1) & (tlist.inmask == 1) & (tlist.pcode !=-1)]
+        selected = tlist[(tlist.selected == 1) & (tlist.inMask == 1) & (tlist.pcode !=-1)]
         nSlits = selected.shape[0]
         if nSlits > 0:
             cols.append(pf.Column(name="bSlitId", format="I11",
