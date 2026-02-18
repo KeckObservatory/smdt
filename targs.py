@@ -3,7 +3,7 @@ import json
 import math
 import dss2Header
 from inOutChecker import InOutChecker
-from maskLayouts import MaskLayouts
+from maskLayouts import MaskLayouts,GuiderFOVs
 import logging
 import pdb
 logger = logging.getLogger('smdt')
@@ -295,7 +295,7 @@ def update_target(targetList, jvalues):
 
     return targetList, idx
 
-def mark_inside(targetList,inst):
+def mark_inside_old(targetList,inst):
     """
     Sets the inMask flag to 1 (inside) or 0 (outside)
     """
@@ -306,3 +306,34 @@ def mark_inside(targetList,inst):
         isIn = int(inOutChecker.checkPoint(target.get('xarcs'), target.get('yarcs')))
         outTargets.append( {**target, 'inMask': isIn})
     return outTargets 
+
+def mark_inside_guider(targetList,inst):
+    """
+    Sets the inMask flag to 1 (inside) or 0 (outside)
+    """
+    layout = GuiderFOVs[inst]
+    inOutChecker = InOutChecker(layout)
+    outTargets = []
+    for target in targetList:
+        isIn = int(inOutChecker.checkPoint(target.get('xarcs'), target.get('yarcs')))
+        outTargets.append( {**target, 'inMask': isIn})
+    return outTargets
+
+def mark_inside(targetList,inst):
+    """ 
+    Sets the inMask flag to 1 (inside) or 0 (outside)
+    """ 
+    layout = MaskLayouts[inst]
+    inOutChecker = InOutChecker(layout)
+    glayout = GuiderFOVs[inst]
+    ginOutChecker = InOutChecker(glayout)
+    outTargets = []
+    for target in targetList:
+        if target.get('pcode')==-1:
+            isIn = int(ginOutChecker.checkPoint(target.get('xarcs'), target.get('yarcs')))
+            outTargets.append( {**target, 'inMask': isIn})
+        else:
+            isIn = int(inOutChecker.checkPoint(target.get('xarcs'), target.get('yarcs')))
+            outTargets.append( {**target, 'inMask': isIn})
+    return outTargets
+

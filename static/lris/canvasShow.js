@@ -677,12 +677,12 @@ function CanvasShow(containerName, zoomContainer) {
         var ctx2 = self.filter.tmpCtx2;
         with (ctx2) {
             setTransform(1, 0, 0, 1, 0, 0);
-            self.drawGuiderFOV(ctx2, self.guiderFOV);
+            var rotatedGuideFOV = self.drawGuiderFOV(ctx2, self.guiderFOV);
             self.drawBadColumns(ctx2, self.badColumns);
             var rotatedMask = self.drawMask(ctx2, self.maskLayout);
-
             var checker = new InOutChecker(rotatedMask);
-            self.drawTargets(ctx2, checker);
+            var guideChecker = new InOutChecker(rotatedGuideFOV);
+            self.drawTargets(ctx2, checker, guideChecker);
             self.drawCompass(ctx2);
         }
         // Copies result to destCtx
@@ -749,7 +749,7 @@ function CanvasShow(containerName, zoomContainer) {
     //
     // Draws targets according to options
     //
-    self.drawTargets = function (ctx, checker) {
+    self.drawTargets = function (ctx, checker, guideChecker) {
         // This function is called once per target.
         // It adds the target to the given list.
 
@@ -783,6 +783,7 @@ function CanvasShow(containerName, zoomContainer) {
 
                 var pri = pcode[i];
                 var inMask = checker.checkPoint(sx, sy);
+                var inGuideFOV = guideChecker.checkPoint(sx, sy);
 
                 xOut.push(sx);
                 yOut.push(sy);
@@ -790,7 +791,7 @@ function CanvasShow(containerName, zoomContainer) {
                 checkClick(i, x, y);
 
                 if (pri == GuideBox) {
-                    if (inMask) guideBoxInIdx.push(i);
+                    if (inGuideFOV) guideBoxInIdx.push(i);
                     else guideBoxOutIdx.push(i);
                     continue;
                 }
@@ -1315,10 +1316,13 @@ function CanvasShow(containerName, zoomContainer) {
         return out;
     };
 
+
     self.drawGuiderFOV = function (ctx, guiderFOV) {
-        if (!E("showGuiderFOV").checked) return;
         var layout = self.rotateMaskLayout(guiderFOV);
-        drawPolylines(ctx, layout, self.guiderFOVColor, 1);
+        if (E("showGuiderFOV").checked) {
+            drawPolylines(ctx, layout, self.guiderFOVColor, 1);
+        }
+        return layout;
     };
 
     self.drawBadColumns = function (ctx, badColumns) {

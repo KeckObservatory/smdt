@@ -317,6 +317,7 @@ def sendTargets2Server():
     session['params']['Instrument'] = app.config["INSTRUMENT"]
     session['params']['Telescope'] = app.config["TELESCOPE"]
 
+
     fh = [line for line in request.json['file'].split('\n') if line]
     session['targetList'] = targs.readRaw(fh, session['params'])
     # check if ra dec is 0, 0, if so, set to first target
@@ -352,11 +353,23 @@ def updateParams4Server():
 
     if 'targetList' not in session:
         session['targetList'] = []
+
+    if session['params'].get('lockSlits') in ['on', True, 'true', '1']: #pretty sure it is just 'on' for checkbox.
+        print(session['params'])
+        maskpa = float(session['params'].get('MaskPA', 0))
+        session['targetList'] = targs.update_column(
+            session['targetList'], 'slitpa', maskpa
+        )
+        session['params']['SlitPA'] = maskpa
+        session.modified = True
+        print(session['targetList'])
+
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=False)
     session.modified = True
     outp = targs.to_json_with_info(session['params'], session['targetList'])
+    print(outp)
     outp = {**outp, 'status': 'OK'}
     return outp
 
