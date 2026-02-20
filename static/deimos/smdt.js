@@ -128,13 +128,13 @@ function SlitmaskDesignTool() {
 		self.load_slitmask_callback(data);
 	};
 
-	self.sendParamUpdate = function () {
+	self.oldsendParamUpdate = function () {
 
 
 		self.setStatus("Updating ...");
                 if (E("lockSlits").checked) {
                     E('SlitPAfd').value = E('MaskPAfd').value;
-                    self.setSlitsPA();
+                    self.setSlitsPAx();
                 }
 
 		const filename = E('targetList');
@@ -150,6 +150,58 @@ function SlitmaskDesignTool() {
 		ajaxPost('updateParams4Server', data, self.param_update_callback);
 
 	};
+
+        self.sendParamUpdate = function () {
+
+                self.setStatus("Updating ...");
+
+                const form2 = E('form2');
+                const formData = new FormData(form2);
+                let params = {};
+                formData.forEach((value, key) => params[key] = value);
+
+                let data = {
+                        formData: params
+                };
+
+                if (E("lockSlits").checked && Number(E('SlitPAfd').value) !== Number(E('MaskPAfd').value)) {
+
+                        E('SlitPAfd').value = E('MaskPAfd').value;
+
+                        let pa = Number(E('SlitPAfd').value);
+
+                        // update locally for instant feedback
+                        let tgs = self.canvasShow.targets || [];
+                        for (let i = 0; i < tgs.length; ++i) {
+                                if (tgs[i].pcode <= 0) continue;
+                                tgs[i].slitLPA = pa;
+                        }
+                        self.canvasShow.slitsReady = 0;
+                        self.canvasShow.reDrawTable();
+                        self.redraw();
+
+                        let input = {
+                                column: 'slitLPA',
+                                value: pa
+                        };
+
+                        // Order is important here
+                        ajaxPost('setColumnValue', input, function (resp) {
+
+                                if (resp.status !== 'OK') {
+                                        alert(resp.msg || 'Error setting column');
+                                        return;
+                                }
+
+                                // only runs AFTER setColumnValue completes
+                                ajaxPost('updateParams4Server', data, self.param_update_callback);
+                        });
+
+                } else {
+                        // normal path
+                        ajaxPost('updateParams4Server', data, self.param_update_callback);
+                }
+        };
 
 	self.loadMaskLayout = function () {
 		function callback(data) {
@@ -265,13 +317,41 @@ function SlitmaskDesignTool() {
 
 
 
+        self.setSlitsPAx = function () {
+                console.log('setSlitsPA')
+                let pa = Number(E('SlitPAfd').value);
+                console.log(pa)
+                let tgs = self.canvasShow.targets;
+                console.log(tgs)
+                let ntgs = tgs.length;
+                console.log(ntgs)
+                let i; 
+                for (i = 0; i < ntgs; ++i) {
+                        if (tgs[i].pcode <= 0) continue;
+                        tgs[i].slitLPA = pa;
+                }
+                self.canvasShow.reDrawTable();
+                self.redraw();
+                
+                let colName = 'slitLPA';
+                let value = pa;
+                let input = {
+                        'column': colName,
+                        'value': value,
+                };
+                ajaxPost('setColumnValue', input, self.setColumnValueCallback);
+        };
 
 
 
 	self.setSlitsPA = function (evt) {
+                console.log('setSlitsPA')
 		let pa = Number(E('SlitPAfd').value);
+                console.log(pa)
 		let tgs = self.canvasShow.targets;
+                console.log(tgs)
 		let ntgs = tgs.length;
+                console.log(ntgs)
 		let i;
 		for (i = 0; i < ntgs; ++i) {
 			if (tgs[i].pcode <= 0) continue;
