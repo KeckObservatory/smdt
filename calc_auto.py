@@ -191,11 +191,11 @@ if __name__ == "__main__":
     df = pd.DataFrame([{'objectId': 'GUI310', 'raHour': 0.6767944444444444, 'decDeg': 40.87046388888889, 'eqx': 2000.0, 'mag': 17.576499938964844, 'pBand': 'F814W', 'pcode': 2, 'sampleNr': 0, 'selected': 1, 'slitLPA': 0.0, 'length1': 5.0, 'length2': 5.0, 'rlength1': 24.3413338666615, 'rlength2': 7.036940753079875, 'slitWidth': 1.0, 'orgIndex': 0, 'inMask': 0, 'raRad': 0.17718437122142097, 'decRad': 0.7133241616785571, 'localselected': 1, 'xarcsS': 411.3483711801043, 'yarcsS': 0.0, 'xarcs': 420.00056773689516, 'yarcs': 0.0, 'length1S': 15.689137309870688, 'length2S': 15.689137309870688, 'slitX1': 312.1810732858256, 'slitX2': 289.1385773622902, 'slitX3': 289.13746568961017, 'slitX4': 312.17987195707576, 'slitY1': -127.47076878992034, 'slitY2': -127.81265007781677, 'slitY3': -127.08012336475899, 'slitY4': -126.73835583136422, 'arcslitX1': 427.03750848997504, 'arcslitX2': 395.6592338702336, 'arcslitX3': 395.6592338702336, 'arcslitX4': 427.03750848997504, 'newcenterRADeg': 10.151916666666665, 'newcenterDECDeg': 40.87046388888889, 'arcslitY1': -0.5, 'arcslitY2': -0.5, 'arcslitY3': 0.5, 'arcslitY4': 0.5, 'ra_fldR': 0.17718437122142097, 'dec_fldR': 0.7132562705156081, 'lst': 0.17718437122142097}])
 
     df = xypos_df(df, inst)
-    print(df)
+#    print(df)
 
     from calc_mill import mill_slit_df
     df = mill_slit_df(df)
-    print(df[["objectId", "millX1", "millY1", "millX2", "millY2", "millX3", "millY3", "millX4", "millY4"]])
+#    print(df[["objectId", "millX1", "millY1", "millX2", "millY2", "millX3", "millY3", "millX4", "millY4"]])
 
 
 def get_mill(df):
@@ -208,13 +208,13 @@ def get_mill(df):
     )
 
 
-    print("/n/n/n Typing")
-    print(type(df))
+#    print("/n/n/n Typing")
+#    print(type(df))
    
-    print(type(df[0]))
+#    print(type(df[0]))
 
     df = xypos_df(df, inst)
-    print(df)
+#    print(df)
 
     from calc_mill import mill_slit_df
     df = mill_slit_df(df)

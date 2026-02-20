@@ -131,7 +131,7 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=True):
         # Stack corners into arrays
         X_mask = np.vstack([X1, X2, X3, X4]).T
         Y_mask = np.vstack([Y1, Y2, Y3, Y4]).T
-        print(X_mask)
+#        print(X_mask)
 
     # Apply astrometry correction
     X_mask, Y_mask = slit_astrometry_vec(X_mask, Y_mask)
@@ -231,6 +231,6 @@ if __name__ == "__main__":
     }])
 
     df = mill_slit_df([df])
-    print(df)
+#    print(df)
     #print(df[["objectId", "millX1", "millY1", "millX2", "millY2", "millX3", "millY3", "millX4", "millY4"]])
 

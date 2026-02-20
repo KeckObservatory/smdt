@@ -136,6 +136,7 @@ def readparams():
 
 @app.route('/setColumnValue', methods=["GET", "POST"])
 def setColumnValue():
+    print('setColumnValue')
     values = request.json['value']
     column = request.json['column']
     logger.info(f"Setting column {column} to value {values}")
@@ -144,6 +145,7 @@ def setColumnValue():
     session['targetList'] = targs.update_column(
         session['targetList'], column, values)
     session.modified = True
+    #print(session['targetList'][0])
     return {'status': 'OK', 'targets': session['targetList']}
 
 
@@ -208,7 +210,7 @@ def generateSlits():
 def recalculateMask():
     inst = app.config["INSTRUMENT"]
     print('recalculateMask with ',inst)
-    print(session['targetList'])
+    #print(session['targetList'][0])
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=True)
@@ -330,7 +332,7 @@ def sendTargets2Server():
                              for target in session['targetList']]
 
     # generate slits
-    print('send2server',session['params'])
+#    print('send2server',session['params'])
 #    session['targetList'] = calcmask.gen_obs(session['targetList'], session['params'])
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
@@ -344,10 +346,11 @@ def sendTargets2Server():
 
 @app.route('/updateParams4Server', methods=["GET", "POST"])
 def updateParams4Server():
+    print('updateParams4Server')
     inst = app.config["INSTRUMENT"]
     session['params'] = request.json['formData']
-    print(session['params'])
-    if 'targetList' in session: print(session['targetList'])
+#    print(session['params'])
+#    if 'targetList' in session: print(session['targetList'][0])
     # ok, session['params'] = validate_params(session['params'])
     ok = True
     if not ok:
@@ -371,7 +374,7 @@ def updateParams4Server():
         session['targetList'], session['params'], auto_sel=False)
     session.modified = True
     outp = targs.to_json_with_info(session['params'], session['targetList'])
-    print(outp)
+    print(session['targetList'][0])
     outp = {**outp, 'status': 'OK'}
     return outp
 
