@@ -68,42 +68,13 @@ function SlitmaskDesignTool() {
 		self.redraw()
 	};
 
-//	self.load_slitmask_callback = function (data) {
-//		self.canvasShow.slitsReady = false;
-//		if (!data) return;
-//		if (!data.targets) return;
-//		self.updateLoadedTargets(data);
-//		self.redraw()
-//	};
-
-
-        self.load_slitmask_callback = function (data) {
-            self.canvasShow.slitsReady = false;
-            if (!data) return;
-            if (!data.targets) return;
-
-            self.updateLoadedTargets(data);
-
-    // auto-lock slit PA to mask PA if checkbox enabled
-            if (data.params.lockSlits) {
-                let pa = Number(data.params.MaskPA);
-
-                // update the SlitPA field so UI matches
-                let slitField = E('SlitPAfd');
-                if (slitField) slitField.value = pa;
-
-                // apply to targets (same logic as button)
-                let tgs = self.canvasShow.targets || [];
-                for (let i = 0; i < tgs.length; ++i) {
-                    if (tgs[i].pcode <= 0) continue;
-                    tgs[i].slitLPA = pa;
-                }
-
-                self.canvasShow.reDrawTable();
-            }
-
-            self.redraw();
-        };
+	self.load_slitmask_callback = function (data) {
+		self.canvasShow.slitsReady = false;
+		if (!data) return;
+		if (!data.targets) return;
+		self.updateLoadedTargets(data);
+		self.redraw()
+	};
 
 
 
@@ -161,6 +132,10 @@ function SlitmaskDesignTool() {
 
 
 		self.setStatus("Updating ...");
+                if (E("lockSlits").checked) {
+                    E('SlitPAfd').value = E('MaskPAfd').value;
+                    self.setSlitsPA();
+                }
 
 		const filename = E('targetList');
 

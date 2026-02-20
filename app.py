@@ -208,6 +208,7 @@ def generateSlits():
 def recalculateMask():
     inst = app.config["INSTRUMENT"]
     print('recalculateMask with ',inst)
+    print(session['targetList'])
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
         session['targetList'], session['params'], auto_sel=True)
@@ -346,6 +347,7 @@ def updateParams4Server():
     inst = app.config["INSTRUMENT"]
     session['params'] = request.json['formData']
     print(session['params'])
+    if 'targetList' in session: print(session['targetList'])
     # ok, session['params'] = validate_params(session['params'])
     ok = True
     if not ok:
@@ -354,15 +356,15 @@ def updateParams4Server():
     if 'targetList' not in session:
         session['targetList'] = []
 
-    if session['params'].get('lockSlits') in ['on', True, 'true', '1']: #pretty sure it is just 'on' for checkbox.
-        print(session['params'])
-        maskpa = float(session['params'].get('MaskPA', 0))
-        session['targetList'] = targs.update_column(
-            session['targetList'], 'slitpa', maskpa
-        )
-        session['params']['SlitPA'] = maskpa
-        session.modified = True
-        print(session['targetList'])
+#    if session['params'].get('lockSlits') in ['on', True, 'true', '1']: #pretty sure it is just 'on' for checkbox.
+#        print(session['params'])
+#        maskpa = float(session['params'].get('MaskPA', 0.5))
+#        session['targetList'] = targs.update_column(
+#            session['targetList'], 'slitpa', maskpa
+#        )
+#        session['params']['SlitPA'] = maskpa
+#        session.modified = True
+#        print(session['targetList'])
 
     session['targetList'] = targs.mark_inside(session['targetList'],inst)
     session['targetList'] = calcmask.gen_slits(
