@@ -515,7 +515,7 @@ function CanvasShow(containerName, zoomContainer) {
         var cv = self._Canvas;
         var sw = cv.width / xrange;
         var sh = cv.height / yrange;
-        var scale = Math.min(sw, sh) * 0.9;
+        var scale = Math.min(sw, sh) * 0.7;
 
         var x = cv.width / 2;
         var y = cv.height / 2;
@@ -534,13 +534,13 @@ function CanvasShow(containerName, zoomContainer) {
         var tmatAngleRad = self.tMatrix.getRotAngle();
 
         var sxy = self.origSkyMatrix.s2w(self.maskOffsetX, self.maskOffsetY, 0);
-
-        self.currDecDeg = self.centerDecDeg + (self.maskOffsetX - sxy[0]) / 3600;
-
+        console.log(self.centerDecDeg,self.maskOffsetX,sxy[0])
+        self.currDecDeg = self.centerDecDeg + (sxy[0] - self.maskOffsetX ) / 3600;
+        console.log(self.currDecDeg)
         var cosDec = Math.cos(radians(self.currDecDeg));
         cosDec = Math.max(cosDec, 1e-4);
-
-        self.currRaDeg = self.centerRaDeg + (self.maskOffsetY - sxy[1]) / 3600 / cosDec;
+        console.log(self.centerRaDeg,self.maskOffsetY,sxy[1])
+        self.currRaDeg = self.centerRaDeg - (sxy[1] - self.maskOffsetY) / 3600 / cosDec;
 
         var raSexa = toSexa(self.currRaDeg / 15);
         var decSexa = toSexa(self.currDecDeg);
@@ -679,6 +679,7 @@ function CanvasShow(containerName, zoomContainer) {
             setTransform(1, 0, 0, 1, 0, 0);
             var rotatedGuideFOV = self.drawGuiderFOV(ctx2, self.guiderFOV);
             self.drawBadColumns(ctx2, self.badColumns);
+            self.drawChipGaps(ctx2, self.ChipGaps);
             var rotatedMask = self.drawMask(ctx2, self.maskLayout);
             var checker = new InOutChecker(rotatedMask);
             var guideChecker = new InOutChecker(rotatedGuideFOV);
@@ -1331,6 +1332,13 @@ function CanvasShow(containerName, zoomContainer) {
         drawPolylines(ctx, layout, self.BadColumnsColor, 1);
     };
 
+    self.drawChipGaps = function (ctx, ChipGaps) {
+        console.log('DrawChipGaps')
+        console.log(ChipGaps)
+        var layout = self.rotateMaskLayout(ChipGaps);
+        drawPolylines(ctx, layout, self.maskColor, 1);
+    };  
+
     self.drawMask = function (ctx, mask) {
         var layout = mask.concat(self.centerMarker);
         var layout1 = self.rotateMaskLayout(layout);
@@ -1413,7 +1421,7 @@ function CanvasShow(containerName, zoomContainer) {
         // focal plane to sky
         var rxy = self.origSkyMatrix.s2w(xy0[0], xy0[1], 0);
 
-        var dec = self.centerDecDeg + (rxy[0] + self.maskOffsetX) / 3600;
+        var dec = self.centerDecDeg + (rxy[0] - self.maskOffsetX ) / 3600;
         var cosDec = Math.cos(radians(dec));
         cosDec = Math.max(cosDec, 1e-4);
         rxy[1] = (rxy[1] - self.maskOffsetY) / cosDec;
@@ -1702,10 +1710,11 @@ function CanvasShow(containerName, zoomContainer) {
         self.reDrawTable();
     };
 
-    self.setMaskLayout = function (layout, guiderFOV, badCols) {
+    self.setMaskLayout = function (layout, guiderFOV, badCols, ChipGaps) {
         self.maskLayout = layout;
         self.guiderFOV = guiderFOV;
         self.badColumns = badCols;
+        self.ChipGaps = ChipGaps;
         self.findMaskMinMax();
         self.resetDisplay();
         self.resetOffsets();

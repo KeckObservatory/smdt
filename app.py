@@ -109,7 +109,7 @@ def readparams():
     params = {}
 
     instrument = app.config["INSTRUMENT"]
-    print('instrument: ',instrument)
+    #print('instrument: ',instrument)
     with open('params.cfg') as f:
         for line in f:
             try:
@@ -122,7 +122,7 @@ def readparams():
                     continue
             except Exception as e:
                 print('Failed to load parameters', e)
-    print(instrument,'!!!')
+    #print(instrument,'!!!')
     if instrument == "lris":
         tel_params = ("Keck I", "", "Telescope", "Keck I or Keck II")
         inst_params = ("LRIS", "", "Instrument", "LRIS or DEIMOS")
@@ -374,7 +374,7 @@ def updateParams4Server():
         session['targetList'], session['params'], auto_sel=False)
     session.modified = True
     outp = targs.to_json_with_info(session['params'], session['targetList'])
-    print(session['targetList'][0])
+    #print(session['targetList'][0])
     outp = {**outp, 'status': 'OK'}
     return outp
 
@@ -393,7 +393,7 @@ def getMaskLayout():
     Gets the mask layout, which is defined in maskLayout.py as a python data structure for convenience.
     MaskLayoput, GuiderFOV and Badcolumns are defined in maskLayouts.py
 
-    Returns a JSON with mask, guiderFOC and badColumns
+    Returns a JSON with mask, guiderFOC and badColumns and chipGaps for LRIS
     """
     try:
         instrument = app.config["INSTRUMENT"]
@@ -402,8 +402,10 @@ def getMaskLayout():
         # list of (x, y, w, h, ang), boxes
         guiderFOV = ml.GuiderFOVs[instrument]
         badColumns = ml.BadColumns[instrument]  # list of lines, as polygons
+        chipGaps = ml.ChipGaps[instrument]
+        #print(chipGaps)
         # might need to be jsonified
-        return {"mask": mask, "guiderFOV": guiderFOV, "badColumns": badColumns}
+        return {"mask": mask, "guiderFOV": guiderFOV, "badColumns": badColumns,"ChipGaps":chipGaps}
     except Exception as err:
         logger.error(err)
         return ((0, 0, 0),)
@@ -412,11 +414,19 @@ def getMaskLayout():
 @app.route('/')
 def home():
     instrument = app.config["INSTRUMENT"]
+    telescope = app.config["TELESCOPE"]
+    launch_params = {
+        "Instrument": instrument,
+        "Telescope": telescope
+    }
     print('Render template for instrument ',instrument)
+
     if instrument == "lris":
-        return render_template("dt_lris.html")
-    else:  # deimos default
-        return render_template("dt_deimos.html")
+        return render_template("dt_lris.html",
+                               launchParams=launch_params)
+    else:
+        return render_template("dt_deimos.html",
+                               launchParams=launch_params)
 
 
 @app.route("/targets", methods=["GET", "POST"])

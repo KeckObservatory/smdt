@@ -25,12 +25,14 @@ function SlitmaskDesignTool() {
 		for (let key of schema.required) {
 			sortedProps[key] = schema.properties[key]
 		}
-		const params = undefined;
+		//const params = undefined;
+                const params = window.launchParams || {};
 		for (let [key, props] of Object.entries(sortedProps)) {
 			const type = props.type.includes('number') ? 'number' : 'text';
-			const value = params ? params[key] : props.default;
+			//const value = params ? params[key] : props.default;
+                        const value = (params[key] !== undefined) ? params[key] : props.default;
                         const readOnly = (key === "Instrument" || key === "Telescope") ? "readonly" : "";
-                        txt = `<tr><td> ${props.label} :<td><input type=${type} id="${key}fd" name="${key}" value="${value}"i ${readOnly}><td>${props.description}`;
+			txt = `<tr><td> ${props.label} :<td><input type=${type} id="${key}fd" name="${key}" value="${value}"i ${readOnly}><td>${props.description}`;
 			buf.push(txt);
 		}
 		buf.push('</table>');
@@ -75,9 +77,6 @@ function SlitmaskDesignTool() {
 		self.updateLoadedTargets(data);
 		self.redraw()
 	};
-
-
-
 
 	self.sendTargets2Server = function () {
 		// The browser loads the targets and sends them to the server.
@@ -132,10 +131,6 @@ function SlitmaskDesignTool() {
 
 
 		self.setStatus("Updating ...");
-                if (E("lockSlits").checked) {
-                    E('SlitPAfd').value = E('MaskPAfd').value;
-                    self.setSlitsPAx();
-                }
 
 		const filename = E('targetList');
 
@@ -151,25 +146,19 @@ function SlitmaskDesignTool() {
 
 	};
 
+
         self.sendParamUpdate = function () {
-
                 self.setStatus("Updating ...");
-
                 const form2 = E('form2');
                 const formData = new FormData(form2);
                 let params = {};
                 formData.forEach((value, key) => params[key] = value);
-
                 let data = {
                         formData: params
                 };
-
                 if (E("lockSlits").checked && Number(E('SlitPAfd').value) !== Number(E('MaskPAfd').value)) {
-
                         E('SlitPAfd').value = E('MaskPAfd').value;
-
                         let pa = Number(E('SlitPAfd').value);
-
                         // update locally for instant feedback
                         let tgs = self.canvasShow.targets || [];
                         for (let i = 0; i < tgs.length; ++i) {
@@ -179,24 +168,19 @@ function SlitmaskDesignTool() {
                         self.canvasShow.slitsReady = 0;
                         self.canvasShow.reDrawTable();
                         self.redraw();
-
                         let input = {
                                 column: 'slitLPA',
                                 value: pa
                         };
-
                         // Order is important here
                         ajaxPost('setColumnValue', input, function (resp) {
-
                                 if (resp.status !== 'OK') {
                                         alert(resp.msg || 'Error setting column');
                                         return;
                                 }
-
                                 // only runs AFTER setColumnValue completes
                                 ajaxPost('updateParams4Server', data, self.param_update_callback);
                         });
-
                 } else {
                         // normal path
                         ajaxPost('updateParams4Server', data, self.param_update_callback);
@@ -237,6 +221,7 @@ function SlitmaskDesignTool() {
 		cs.eastAngle = info['eastAngle'] * 1;
 		cs.centerRaDeg = info['centerRADeg'] * 1;
 		cs.centerDecDeg = info['centerDEC'] * 1;
+                console.log(info,cs.centerRaDeg,cs.centerDecDeg)
 		cs.positionAngle = 0;
 		cs.origPA = info['positionAngle'] * 1;
 		cs.currRaDeg = cs.centerRaDeg;
@@ -252,11 +237,7 @@ function SlitmaskDesignTool() {
 		self.canvasShow.selectTargetByIndex(self.canvasShow.selectedTargetIdx);
 	};
 
-	self.reloadTargets = function (newIdx, info = []) {
-
-		let data = {
-			'info': info
-		}
+	self.reloadTargets = function (newIdx, data) {
 		self.updateLoadedTargets(data);
 		self.canvasShow.selectTargetByIndex(newIdx);
 	};
@@ -317,41 +298,13 @@ function SlitmaskDesignTool() {
 
 
 
-        self.setSlitsPAx = function () {
-                console.log('setSlitsPA')
-                let pa = Number(E('SlitPAfd').value);
-                console.log(pa)
-                let tgs = self.canvasShow.targets;
-                console.log(tgs)
-                let ntgs = tgs.length;
-                console.log(ntgs)
-                let i; 
-                for (i = 0; i < ntgs; ++i) {
-                        if (tgs[i].pcode <= 0) continue;
-                        tgs[i].slitLPA = pa;
-                }
-                self.canvasShow.reDrawTable();
-                self.redraw();
-                
-                let colName = 'slitLPA';
-                let value = pa;
-                let input = {
-                        'column': colName,
-                        'value': value,
-                };
-                ajaxPost('setColumnValue', input, self.setColumnValueCallback);
-        };
 
 
 
 	self.setSlitsPA = function (evt) {
-                console.log('setSlitsPA')
 		let pa = Number(E('SlitPAfd').value);
-                console.log(pa)
 		let tgs = self.canvasShow.targets;
-                console.log(tgs)
 		let ntgs = tgs.length;
-                console.log(ntgs)
 		let i;
 		for (i = 0; i < ntgs; ++i) {
 			if (tgs[i].pcode <= 0) continue;
@@ -453,12 +406,14 @@ function SlitmaskDesignTool() {
 
 	self.resetSelection = function (evt) {
 		function resetSelectionCallback(data) {
-                        self.canvasShow.slitsReady = false;
-                        if (!data) return;
-                        if (!data.targets) return;
-             			self.reloadTargets(data);
-                                self.canvasShow.slitsReady = false;
-                                self.redraw()
+			console.log('data', data);
+			self.canvasShow.slitsReady = false;
+			if (!data) return;
+			if (!data.targets) return;
+			console.log('going to reload targets');
+			self.reloadTargets(0,data);
+			self.canvasShow.slitsReady = false;
+			self.redraw()
 		}
                 let data = 0;
 		ajaxPost("resetSelection", data, resetSelectionCallback);
@@ -550,7 +505,7 @@ function SlitmaskDesignTool() {
 	self.selectToggle = function (evt) {
 		// Updates an existing or adds a new target.
 		function selectToggleCallback(data) {
-			self.reloadTargets(idx, data.info);
+			self.reloadTargets(idx, data);
 			self.canvasShow.selectedTargetIdx = i;
 			self.updateLoadedTargets(data);
 			self.canvasShow.reDrawTable();
@@ -588,7 +543,7 @@ function SlitmaskDesignTool() {
 	self.updateTarget = function (evt) {
 		// Updates an existing or adds a new target.
 		function updateTargetCallback(data) {
-			self.reloadTargets(idx, data.info);
+			self.reloadTargets(idx, data);
 			self.canvasShow.selectedTargetIdx = i;
 			self.updateLoadedTargets(data);
 			self.canvasShow.reDrawTable();
@@ -621,7 +576,7 @@ function SlitmaskDesignTool() {
 
 	self.deleteTarget = function (evt) {
 		function deleteCallback(data) {
-			self.reloadTargets(idx, data.info);
+			self.reloadTargets(idx, data);
 			self.canvasShow.selectedTargetIdx = i;
 			self.canvasShow.reDrawTable();
 			self.updateLoadedTargets(data);

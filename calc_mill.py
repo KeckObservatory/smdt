@@ -208,6 +208,8 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=True):
 #                fout.write(line + "\n")  # to file
 
 
+    for row in df:
+        print((row["millX1"]+row["millX3"])/2/(0.7253 * 0.99857),(row["millY1"]+row["millY3"])/2/(0.7253 * 0.99857))
 
     return df
 

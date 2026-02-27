@@ -219,5 +219,6 @@ def get_mill(df):
     from calc_mill import mill_slit_df
     df = mill_slit_df(df)
     for row in df:
-        print(row["objectId"],row["millX1"], row["millY1"],row["millX2"], row["millY2"],row["millX3"], row["millY3"],row["millX4"], row["millY4"])
+        #print(row["objectId"],row["millX1"], row["millY1"],row["millX2"], row["millY2"],row["millX3"], row["millY3"],row["millX4"], row["millY4"])
+        print(row["objectId"],row["obj_t_x"],row["obj_t_y"],row["obj_t_x"]/(0.7253 * 0.99857),row["obj_t_y"]/(0.7253 * 0.99857)) 
     return df

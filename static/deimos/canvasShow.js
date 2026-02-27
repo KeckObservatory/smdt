@@ -542,6 +542,11 @@ function CanvasShow(containerName, zoomContainer) {
 
         self.currRaDeg = self.centerRaDeg + (self.maskOffsetY - sxy[1]) / 3600 / cosDec;
 
+        console.log(self.centerDecDeg,self.maskOffsetX,sxy[0])
+        console.log(self.currDecDeg)
+        console.log(self.centerRaDeg,self.maskOffsetY,sxy[1])
+
+
         var raSexa = toSexa(self.currRaDeg / 15);
         var decSexa = toSexa(self.currDecDeg);
         var paDeg = self.positionAngle + self.origPA;

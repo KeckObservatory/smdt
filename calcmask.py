@@ -176,6 +176,7 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
         FLDCEN_X = 420. 
         FLDCEN_Y = 0.
     else:   #assume deimos
+        print('fld2telax using diemos')
         FLDCEN_X = 0
         FLDCEN_Y = 270
     # convert field center offset (arcsec) to radians
@@ -209,6 +210,8 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
 
 
 def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
+    print('tel_coords')
+
     flip = -1
     # PA_ROT better be in radians <-- should be pa_rot??  I think this needs to clearly be PA_ROT
     outObs = []
@@ -268,6 +271,7 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
         ob['xarcs'] =_xarcs
         ob['yarcs'] =_yarcs
         ob['relpa'] =_relpa
+        #print('xarcs,yarcs',_xarcs,_yarcs)
         outObs.append(ob)
     return outObs 
 
