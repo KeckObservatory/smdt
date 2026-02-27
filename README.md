@@ -1,11 +1,11 @@
-# DEIMOS Slitmask Design Tool
+# W. M. KECK Observatory Slitmask Design Tool
 
-This software is still in active development and close to ready for release.  Any feedback is welcome
+This software is still in active development and close to ready for release for both LRIS and DEIMOS.  Any feedback is welcome.
 
 ### Installation
 Several python modules may need to be installed including flask, astropy, numpy, etc.
 
-Launch using `python app.py`
+Launch using `python app.py --lris` or `python app.py --deimos`
 
 ### Instructions
 - Select catalog file and click load targets.  
