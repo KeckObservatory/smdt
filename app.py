@@ -14,6 +14,8 @@ import tarfile
 from utils import schema, stripquote
 from io import BytesIO
 import utils as util
+from threading import Timer
+import webbrowser
 import argparse
 
 logger = logging.getLogger('smdt')
@@ -435,6 +437,6 @@ def LoadTargets():
 
 
 if __name__ == '__main__':
-    # t = Timer(1, launchBrowser, ['localhost', 9302, '/'])
-    # t.start()
+    t = Timer(1, launchBrowser, ['localhost', 9302, '/'])
+    t.start()
     app.run(host='localhost', port=9302, debug=True, use_reloader=False)
