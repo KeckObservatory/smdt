@@ -257,7 +257,7 @@ class MaskDesignOutputFitsFile:
         cols.append(pf.Column(name="ProjName", format="A68",
                     null="INDEF", unit="None", array=[params.project],))
         cols.append(pf.Column(name="INSTRUME", format="A68",
-                    null="INDEF", unit="None", array=[params.instrument],))
+                    null="INDEF", unit="None", array=[params.instrument.iloc[0].upper()],))
         cols.append(pf.Column(name="MaskType", format="A68",
                     null="INDEF", unit="None", array=["???"]))
         cols.append(pf.Column(name="RA_PNT", format="F12.8",

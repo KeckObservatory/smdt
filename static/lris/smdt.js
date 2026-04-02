@@ -30,7 +30,10 @@ function SlitmaskDesignTool() {
 		for (let [key, props] of Object.entries(sortedProps)) {
 			const type = props.type.includes('number') ? 'number' : 'text';
 			//const value = params ? params[key] : props.default;
-                        const value = (params[key] !== undefined) ? params[key] : props.default;
+                        let value = (params[key] !== undefined) ? params[key] : props.default;
+                        if (key === "Instrument") {
+                            value = value.toUpperCase();  
+                        }
                         const readOnly = (key === "Instrument" || key === "Telescope") ? "readonly" : "";
 			txt = `<tr><td> ${props.label} :<td><input type=${type} id="${key}fd" name="${key}" value="${value}"i ${readOnly}><td>${props.description}`;
 			buf.push(txt);

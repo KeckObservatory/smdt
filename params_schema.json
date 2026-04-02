@@ -8,14 +8,14 @@
             "type": "string",
             "description": "Project name",
             "label": "Project name",
-            "default": "New Mask"
+            "default": "Project"
         },
         "OutputFits": {
             "type": "string",
-            "description": "Mask design file (FITS)",
-            "label": "Output file",
-            "pattern": "^[a-zA-Z0-9]{0,6}.fits$",
-            "default": "mask.fits"
+            "description": "Root filename for mask design files (.out, .png, .fits)",
+            "label": "Output filename",
+            "pattern": "^[a-zA-Z0-9]{0,6}$",
+            "default": "mask"
         },
         "Telescope": {
             "type": "string",
@@ -40,8 +40,8 @@
         "ObsDate": {
             "type": "string",
             "label": "Date",
-            "description": "Observation date and time",
-            "default": "2022-08-31",
+            "description": "Observation date",
+            "default": "2024-01-01",
             "pattern": "(\\d{4})-(\\d{2})-(\\d{2})"
         },
         "Author": {
@@ -58,16 +58,15 @@
         },
         "MaskId": {
             "type": "string",
-            "default": "12345",
-            "description": "Mask identification number",
-            "label": "Mask Id",
-            "maxLength": 6
+            "default": "MaskName",
+            "description": "Full Name of mask design",
+            "label": "Mask Design Name"
         },
         "MaskName": {
             "type": "string",
             "default": "MaskID",
-            "description": "Short name of the mask",
-            "label": "Mask Name",
+            "description": "Short name of mask (6 char or less)",
+            "label": "GUI Name",
             "maxLength": 6
         },
         "MinSlitLength": {
@@ -208,7 +207,7 @@
                 "yes",
                 "no"
             ],
-            "description": "Project slit length to preserver spatial direction [yes/no]",
+            "description": "Project slit length to preserve spatial direction [yes/no]",
             "label": "Project slit length"
         },
         "NoOverlap": {
