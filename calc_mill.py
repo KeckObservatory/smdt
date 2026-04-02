@@ -59,7 +59,7 @@ def mill_coords_vec(xin, yin):
 # Main function: compute slit corners + mill coordinates
 # ============================================================
 
-def mill_slit_df(df, slit_len=SLIT_LEN, print_output=True):
+def mill_slit_df(df, slit_len=SLIT_LEN, print_output=False):
     """
     Compute slit corner coordinates and mill coordinates for a dataframe
     df must contain columns: obj_t_x, obj_t_y, objectId
@@ -190,11 +190,11 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=True):
     with open("a.file3", "w") as fout:
         for row, Xm, Ym, sel in zip(df, X_mill, Y_mill, selected):
             if sel == 1:
-                print("newrow")
+                #print("newrow")
                 fout.write("newrow\n")
                 for i in range(4):
                     line = f"{Xm[i]:.6f} {Ym[i]:.6f} 0.000000"
-                    print(line)
+                    #print(line)
                     fout.write(line + "\n")
                 fout.write(f"{Xm[0]:.6f} {Ym[0]:.6f} 0.000000" + "\n") #return to first corner
 
@@ -208,8 +208,8 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=True):
 #                fout.write(line + "\n")  # to file
 
 
-    for row in df:
-        print((row["millX1"]+row["millX3"])/2/(0.7253 * 0.99857),(row["millY1"]+row["millY3"])/2/(0.7253 * 0.99857))
+#    for row in df:
+#        print((row["millX1"]+row["millX3"])/2/(0.7253 * 0.99857),(row["millY1"]+row["millY3"])/2/(0.7253 * 0.99857))
 
     return df
 

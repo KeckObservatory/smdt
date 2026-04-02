@@ -142,8 +142,8 @@ def setColumnValue():
     values = request.json['value']
     column = request.json['column']
     logger.info(f"Setting column {column} to value {values}")
-    logger.info(f"session keys: {session.keys()}")
-    logger.info(f"session targetList: {session.get('targetList')}")
+#    logger.info(f"session keys: {session.keys()}")
+#    logger.info(f"session targetList: {session.get('targetList')}")
     session['targetList'] = targs.update_column(
         session['targetList'], column, values)
     session.modified = True
