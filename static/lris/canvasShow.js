@@ -1672,6 +1672,7 @@ function CanvasShow(containerName, zoomContainer) {
         var tx = self.tMatrix;
         var xy = tx.w2s(0, 0, 0);
         tx.rotate(Math.PI, xy[0], xy[1]);
+        self.rotateAll(Math.PI / 2);
 
         // Only for changing contrast, not needed now
         //self.filter.setParams(1, 0);
