@@ -208,16 +208,10 @@ def get_mill(df):
     )
 
 
-#    print("/n/n/n Typing")
-#    print(type(df))
    
-#    print(type(df[0]))
 
     df = xypos_df(df, inst)
-#    print(df)
 
     from calc_mill import mill_slit_df
     df = mill_slit_df(df)
-    #for row in df:
-        #print(row["objectId"],row["obj_t_x"],row["obj_t_y"],row["obj_t_x"]/(0.7253 * 0.99857),row["obj_t_y"]/(0.7253 * 0.99857)) 
     return df

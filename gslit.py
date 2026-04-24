@@ -1,3 +1,4 @@
+import pickle
 import math
 import pdb
 import pandas as pd
@@ -86,15 +87,17 @@ def gseval(x1, x2, cen, yas):
 
 
 # Adjust slit lengths to fit
-def len_slits(dict, slit_gap=0.35):
+def len_slits(dict, slit_gap=0.35,inst='deimos'):
     logger.debug('len_slits')
-    #df=pd.DataFrame.from_dict(dict)
     df=pd.DataFrame(dict)
+
     tg = df[(df['pcode']!=-1) & (df['selected']==1) & (df['inMask']==1)] # remove pcode=-1 from list  ## was just tg=df[(df['pcode']!=-1) prev
     tg = tg.sort_values(by=['xarcs'], ascending=True)  ### Correct value to sort on?
+
     gsx1, gsx2=gs_ingest() ## only x used
         
     for i,row in enumerate(tg.iterrows()):
+
         if i==len(tg)-1:
             continue
         ndx1 = tg.index[i]
@@ -109,13 +112,18 @@ def len_slits(dict, slit_gap=0.35):
         xupp = tg.X1[ndx2] - slit_gap 
         xcen = 0.5 * (xlow + xupp)
 
-        yas = tg.Y2[ndx1]
-        dxlow = gseval(gsx1, gsx2, xcen, yas)
-        yas = tg.Y1[ndx2]
-        dxupp = gseval(gsx1, gsx2, xcen, yas)
-        dxavg = 0.5 * (dxupp + dxlow)
-        dxlow = dxlow - dxavg
-        dxupp = dxupp - dxavg
+        if inst == 'lris':
+            dxlow = 0.0
+            dxupp = 0.0
+
+        else:
+            yas = tg.Y2[ndx1]
+            dxlow = gseval(gsx1, gsx2, xcen, yas)
+            yas = tg.Y1[ndx2]
+            dxupp = gseval(gsx1, gsx2, xcen, yas)
+            dxavg = 0.5 * (dxupp + dxlow)
+            dxlow = dxlow - dxavg
+            dxupp = dxupp - dxavg
 
         if (pc1 == -2):
             del1 = 0.
@@ -137,6 +145,7 @@ def len_slits(dict, slit_gap=0.35):
             tana = math.tan(tg.relpa[ndx2])
             tg.loc[ndx2, 'Y1'] = tg.Y1[ndx2] + del2 * tana
 
+
     cols = list(df.columns)
     tg = tg.sort_values(by=["index"])
     df.loc[df.index.isin(tg.index), cols] = tg[cols]
@@ -144,4 +153,7 @@ def len_slits(dict, slit_gap=0.35):
             'orig_ref3', 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR']
     for key in keys:
         df[key] = df.iloc[0][key]
+
+
+
     return df.to_dict(orient='records')

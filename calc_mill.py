@@ -67,22 +67,19 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=False):
 
     X_center = np.array([row["obj_t_x"] for row in df])
     Y_center = np.array([row["obj_t_y"] for row in df])
-    ANGLE = np.array([row["relpa"] for row in df])   # radians  This is relative to mask pa --relpa
+    ANGLE = np.array([row["relpa"] for row in df], dtype=float)   # radians  This is relative to mask pa --relpa
     hwidth = np.array([0.5*row["slitWidth"]*SCALE for row in df])
-    slit_len1 = np.array([row["rlength1"]*SCALE for row in df])
-    slit_len2 = np.array([row["rlength2"]*SCALE for row in df])
+    slit_len1 = np.array([row["length1S"]*SCALE for row in df])
+    slit_len2 = np.array([row["length2S"]*SCALE for row in df])
     selected = np.array([row["selected"] for row in df])
-
 
     if True:
         # Vertical extents
-        Y1 = Y_center - 0.5 * slit_len1
-        Y2 = Y_center + 0.5 * slit_len2
-
+        Y1 = Y_center - 1.0 * slit_len1
+        Y2 = Y_center + 1.0 * slit_len2
         # Mask edge clipping (same as before)
         Y1 = np.maximum(Y1, Y_CENTER - YSIDE/2.0 + 1)
         Y2 = np.minimum(Y2, Y_CENTER + YSIDE/2.0 - 1)
-
         # X offsets due to tilt
         tanA = np.tan(ANGLE)
 
@@ -131,10 +128,10 @@ def mill_slit_df(df, slit_len=SLIT_LEN, print_output=False):
         # Stack corners into arrays
         X_mask = np.vstack([X1, X2, X3, X4]).T
         Y_mask = np.vstack([Y1, Y2, Y3, Y4]).T
-#        print(X_mask)
 
     # Apply astrometry correction
     X_mask, Y_mask = slit_astrometry_vec(X_mask, Y_mask)
+
 
     # Convert to mill coordinates
     X_mill, Y_mill = mill_coords_vec(X_mask, Y_mask)

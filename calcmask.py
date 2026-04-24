@@ -39,7 +39,7 @@ def init_dicts(targetList, params):
         if tilt == True:
             slitpa.append(slit_pa[i])
         else:
-            slitpa.append(-9999)
+            slitpa.append(float(params['MaskPA']))
         raDeg.append(ra[i].degree)
         decDeg.append(dec[i].degree)
 
@@ -188,7 +188,6 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
     outObs = []
     
     for ob in obs:
-        
         PA_ROT = ob['pa0_fld']
         cost = np.cos(PA_ROT - pa_fld)
         sint = np.sin(PA_ROT - pa_fld)
@@ -209,7 +208,7 @@ def fld2telax(obs, ra_fld, dec_fld, ratel, dectel,inst):
 
 
 
-def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
+def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False,second=False):
     print('tel_coords')
 
     flip = -1
@@ -235,9 +234,9 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
         _xarcs = r * np.cos(pa0 - p)
         _yarcs = r * np.sin(pa0 - p)
 
-        if ob['pcode'] == -2:  # No individual slit angles
-            ob['slitpa'] = -9999
-            _relpa = None
+        if ob['pcode'] == -2:  # No individual slit angles, match to mask PA
+            ob['slitpa'] = pa0
+            _relpa = 0
             rangle = 0.  # 90 not zero??
         else:
             _relpa = ob['slitpa'] - pa0  # check that slitLPA is available
@@ -251,8 +250,12 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
             ygeom = ygeom / np.abs(np.cos(rangle))
 
         # We always want X1 < X2, so:
-        length1 = ob['length1']
-        length2 = ob['length2']
+        if second==False:
+            length1 = ob['length1']
+            length2 = ob['length2']
+        else:
+            length1 = ob['length1S']
+            length2 = ob['length2S']
         if (xgeom > 0):
             _X1 = _xarcs - length1 * xgeom
             _Y1 = _yarcs - length1 * ygeom
@@ -276,22 +279,23 @@ def tel_coords(obs, ra, dec, ra0, dec0, proj_len=False):
     return outObs 
 
 def gen_slits_from_obs(obs, min_slit, slit_gap, inst, adj_len=False, auto_sel=True):
-    print('gen_slits_from_obs using inst',inst)
+    print('gen_slits_from_obs using inst',inst,' and slitgap ',slit_gap)
     for idx, ob in enumerate(obs):
 
         ob['index'] = idx 
         ob['slitIndex'] = idx 
         if ob['pcode'] == -2:  
-            ob['slitpa'] == -9999
+            ob['slitpa'] == ob['pa0_fld']
             ob['slitLPA'] = ob['pa0_fld']
-            ob['relpa'] = None
+            ob['relpa'] = 0
         else:
             ob["slitLPA"] = ob['slitpa']
+
 
     obs = dsimselector.from_list(obs, min_slit, slit_gap, inst, auto_sel)
     if adj_len:
         import gslit
-        obs=gslit.len_slits(obs)
+        obs=gslit.len_slits(obs,slit_gap,inst)
     return obs
 
 
@@ -333,7 +337,6 @@ def sky_coords(slit):
         yl1 = ob['yarcs'] - ob['Y1']
         rlen1 = np.sqrt(xl1*xl1 + yl1*yl1)
         rlen2 = np.sqrt(xl2*xl2 + yl2*yl2)
-
         add = {'xarcsS': xarc, 'yarcsS': yarc,
             'length1S': len1, 'length2S': len1, # length1S and length2S are the same
             'rlength1': rlen1, 'rlength2': rlen2,
@@ -528,7 +531,6 @@ def mask_coords_lris(obs):
     FLIP = -1.
     FL_TEL = 150327.0
     outObs=[]
-
     for ob in obs:
         RELPA = ob['relpa']
         XARCS = ob['xarcsS']
@@ -795,20 +797,19 @@ def gen_slits(targetList, fileparams, auto_sel=True, returnSlitSite=False):
     logger.debug('init_dicts')
     obs = refr_coords(obs, site)
     obs = fld2telax(obs, 'ra_fldR', 'dec_fldR', 'ra_telR', 'dec_telR',inst)
-    obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR', proj_len)
+    obs = tel_coords(obs, 'raRadR', 'decRadR', 'ra_telR', 'dec_telR', proj_len, False)
     min_slit = float(fileparams['MinSlitLength'])
     slit_gap = float(fileparams['MinSlitSeparation'])
     slit = gen_slits_from_obs(obs, min_slit, slit_gap, inst, adj_len, auto_sel)
     slit = sky_coords(slit)
     slit = unrefr_coords(slit, site)
     slit = fld2telax(slit, 'ra0_fldU', 'dec0_fldU', 'ra_telU', 'dec_telU',inst)
-    slit = tel_coords(slit, 'raRadU', 'decRadU', 'ra_telU', 'dec_telU', proj_len)
+    slit = tel_coords(slit, 'raRadU', 'decRadU', 'ra_telU', 'dec_telU', proj_len, True)
     if inst=='deimos':
         slit = mask_coords(slit)
     if inst=='lris':
         slit = mask_coords_lris(slit)
         slit = calc_auto.get_mill(slit)
-
     outTargetList = []
     slitKeys = [ 'slitWidth', 'selected',
                 'xarcsS', 'yarcsS',

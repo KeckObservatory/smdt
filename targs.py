@@ -63,8 +63,22 @@ def readRaw(fh, params):
         if len(parts) < 3:
             continue
 
-        if 'PA=' in line:
+        if 'PA=' in line and len(line.split())>=4:
             # line has dsim output first line
+            try:
+                parts=line.split()
+                ra_str=parts[1]
+                dec_str=parts[2]
+                pa = None
+                for i, p in enumerate(parts):
+                    if p == "PA=" and i + 1 < len(parts):
+                        pa = float(parts[i+1])
+                        break
+            except Exception as e:
+                print('Exception: ',e)
+                ra_str="00:00:00.00"
+                dec_str="00:00:00.00"
+                pa=None
             continue
         # print (nr, "len", parts)
 
@@ -139,7 +153,7 @@ def readRaw(fh, params):
         out.append(dict(zip(cols, target)))
         cnt += 1
 
-    return out 
+    return out,ra_str,dec_str,pa 
 
 
 def to_json_with_info(params, targetList, xgaps=[]):
@@ -249,6 +263,8 @@ def update_target(targetList, jvalues):
 
     raRad = math.radians(raHour * 15)
     decRad = math.radians(decDeg)
+    #print(targetList)
+    #print (jvalues)
 
     idx = next((index for (index, d) in enumerate(targetList) if d["objectId"] == targetName), None)
 
@@ -292,7 +308,7 @@ def update_target(targetList, jvalues):
         
 
         targetList.append(newItem)
-
+    #print(targetList)
     return targetList, idx
 
 def mark_inside_old(targetList,inst):

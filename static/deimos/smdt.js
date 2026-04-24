@@ -506,7 +506,7 @@ function SlitmaskDesignTool() {
 		// Updates an existing or adds a new target.
 		function selectToggleCallback(data) {
 			self.reloadTargets(idx, data);
-			self.canvasShow.selectedTargetIdx = i;
+			self.canvasShow.selectedTargetIdx = idx;
 			self.updateLoadedTargets(data);
 			self.canvasShow.reDrawTable();
 		}
@@ -543,8 +543,9 @@ function SlitmaskDesignTool() {
 	self.updateTarget = function (evt) {
 		// Updates an existing or adds a new target.
 		function updateTargetCallback(data) {
+                        console.log(data);
 			self.reloadTargets(idx, data);
-			self.canvasShow.selectedTargetIdx = i;
+			self.canvasShow.selectedTargetIdx = idx;
 			self.updateLoadedTargets(data);
 			self.canvasShow.reDrawTable();
 		}
@@ -571,6 +572,7 @@ function SlitmaskDesignTool() {
 		const data = {
 			'values': values
 		}
+                console.log("len1:", length1);
 		ajaxPost('updateTarget', data, updateTargetCallback);
 	};
 
