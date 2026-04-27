@@ -24,6 +24,12 @@ AS2MM = 1.0 / MM2AS  #
 with open('params_schema.json') as f:
     schema = json.load(f)
 
+with open('params_schema_lris.json') as f:
+    lrisschema = json.load(f)
+
+with open('params_schema_deimos.json') as f:
+    deimosschema = json.load(f)
+
 
 def as2Radian(arcsec):
     return math.radians(arcsec / 3600.0)

@@ -11,7 +11,7 @@ import plot
 import logging
 from logging import FileHandler, StreamHandler
 import tarfile
-from utils import schema, stripquote
+from utils import stripquote, deimosschema, lrisschema
 from io import BytesIO
 import utils as util
 from threading import Timer
@@ -85,6 +85,11 @@ parser.set_defaults(instrument="deimos")
 
 args = parser.parse_args()
 INSTRUMENT = args.instrument
+
+if INSTRUMENT =='lris':
+    schema=lrisschema
+else:
+    schema=deimosschema
 
 
 print(f"Starting server in {INSTRUMENT.upper()} mode")
