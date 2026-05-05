@@ -56,13 +56,6 @@ def ad_to_xy_vec(ra0, dec0, ra, dec, theta, inst):
     """
 
 
-    #ra    = np.array([row["raR"]    for row in df])
-    #dec   = np.array([row["decR"]   for row in df])
-    #theta = np.array([row["theta"]  for row in df])
-
-#    ra  = np.asarray(ra)
-#    dec = np.asarray(dec)
-#    theta = np.asarray(theta)
 
     # Status array (Fortran never really sets this)
     status = np.zeros_like(ra, dtype=int)
@@ -70,7 +63,7 @@ def ad_to_xy_vec(ra0, dec0, ra, dec, theta, inst):
     # Fixed angles
     m_angle = inst.mask_angle_deg * RPD
     bend    = inst.mask_bend_deg * RPD
-    angle   = theta * RPD
+    angle   = theta*-1
 
     xo = inst.x_center / inst.scale
 
